@@ -45,6 +45,13 @@ struct digital_output_s {
     bool inverted;
 };
 
+struct digital_input_s {
+    int32_t port;
+    int8_t pin;
+    bool inverted;
+    bool last_state;
+};
+
 /* === Private function declarations =========================================================== */
 
 /* === Private variable definitions ============================================================ */
@@ -54,8 +61,6 @@ struct digital_output_s {
 /* === Private function definitions ============================================================ */
 
 /* === Public function implementation ========================================================== */
-
-/*OUTPUT FUNCTIONS*/
 
 digital_output_t DigitalOutputCreate(int32_t port, int8_t pin, bool inverted){
     digital_output_t self = NULL;
@@ -89,6 +94,53 @@ bool DigitalOutputGetState(digital_output_t self){
         state = !state;
     }
     return state;
+}
+
+digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted){
+    digital_input_t self = NULL;
+    self = malloc(sizeof(struct digital_input_s));
+    if (self) {
+        self->port = port;
+        self->pin = pin;
+        self->inverted = inverted;
+        Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, self->port, self->pin, false);
+        self->last_state = DigitalInputGetState(self);
+    }
+    return self;
+}
+
+bool DigitalInputGetState(digital_input_t self){
+    bool state = Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, self->port, self->pin);
+    if (self->inverted) {
+        state = !state;
+    }
+    return state;
+}
+
+void DigitalInputUpdate(digital_input_t self){
+    self->last_state = DigitalInputGetState(self);
+}
+
+bool DigitalInputHasChanged(digital_input_t self){
+    bool changed = (DigitalInputGetState(self) != self->last_state);
+
+    return changed;
+}
+
+bool DigitalInputHasActivated(digital_input_t self){
+    bool current_state = DigitalInputGetState(self);
+    bool changed = current_state != self->last_state;
+    bool activated = (changed && current_state);
+
+    return activated;
+}
+
+bool DigitalInputHasDeactivated(digital_input_t self){
+    bool current_state = DigitalInputGetState(self);
+    bool changed = current_state != self->last_state;
+    bool deactivated = (changed && !current_state);
+
+    return deactivated;
 }
 
 /* === End of documentation ==================================================================== */

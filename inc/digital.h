@@ -29,7 +29,7 @@ SPDX-License-Identifier: MIT
 #define DIGITAL_H_
 
 /** @file digital.h
- ** @brief Declaraciones para el manejo de salidas digitales mediante tipo abstracto de datos
+ ** @brief Declaraciones para el manejo de entradas y salidas digitales mediante tipo abstracto de datos
  **/
 
 /* === Headers files inclusions ==================================================================================== */
@@ -50,10 +50,12 @@ extern "C" {
 /** @brief Tipo opaco que representa una salida digital */
 typedef struct digital_output_s * digital_output_t;
 
+/** @brief Tipo opaco que representa una entrada digital */
+typedef struct digital_input_s * digital_input_t;
+
 /* === Public variable declarations ================================================================================ */
 
 /* === Public function declarations ================================================================================ */
-
 
 /**
  * @brief Crea y configura una salida digital
@@ -61,7 +63,7 @@ typedef struct digital_output_s * digital_output_t;
  * @param port  Puerto GPIO al que pertenece el pin
  * @param pin   Número de bit dentro del puerto GPIO
  * @param inverted  Si es true, la lógica de activación se invierte
- * @return digital_output_t  Puntero al objeto creado, o NULL si falla la asignación
+ * @return Puntero al objeto creado, o NULL si falla la asignación
  */
 digital_output_t DigitalOutputCreate(int32_t port, int8_t pin, bool inverted);
 
@@ -93,6 +95,50 @@ void DigitalOutputToggle(digital_output_t output);
  * @return true si la salida está activa, false en caso contrario
  */
 bool DigitalOutputGetState(digital_output_t output);
+
+/** @brief Crea y configura una entrada digital
+ *
+ * @param port  Puerto GPIO al que pertenece el pin
+ * @param pin   Número de bit dentro del puerto GPIO
+ * @param inverted  Si es true, la lógica de activación se invierte
+ * @return Puntero al objeto creado, o NULL si falla la asignación
+ */
+digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted);
+
+/** @brief Obtiene el estado de una entrada digital
+ *
+ * @param input  Entrada digital de la cual obtener el estado
+ * @return true si la entrada está activa, false en caso contrario
+ */
+bool DigitalInputGetState(digital_input_t input);
+
+/** @brief Actualiza el estado interno de una entrada digital, para detectar cambios
+ * @warning Esta función debe ser llamada al final de cada iteración del programa principal, 
+ * después de procesar las entradas digitales, para detectar cambios en la siguiente iteración
+ *
+ * @param input  Entrada digital a actualizar
+ */
+void DigitalInputUpdate(digital_input_t input);
+
+/** @brief Verifica si el estado de una entrada digital ha cambiado desde la última actualización
+ *
+ * @param input  Entrada digital a verificar
+ * @return true si el estado ha cambiado, false en caso contrario
+ */
+bool DigitalInputHasChanged(digital_input_t input);
+
+/** @brief Verifica si una entrada digital ha sido activada desde la última actualización
+ *
+ * @param input  Entrada digital a verificar
+ * @return true si la entrada ha sido activada, false en caso contrario
+ */
+bool DigitalInputHasActivated(digital_input_t input);
+
+/** @brief Verifica si una entrada digital ha sido desactivada desde la última actualización
+ * @param input  Entrada digital a verificar
+ * @return true si la entrada ha sido desactivada, false en caso contrario
+ */
+bool DigitalInputHasDeactivated(digital_input_t input);
 
 /* === End of conditional blocks =================================================================================== */
 

@@ -126,6 +126,11 @@ digital_output_t rgb_red;
 digital_output_t rgb_green;
 digital_output_t rgb_blue;
 
+digital_input_t on_led_rojo_k;
+digital_input_t off_led_rojo_k;
+digital_input_t toggle_led_amarillo_k;
+digital_input_t test_led_verde_k;
+
 /* === Private function declarations =========================================================== */
 
 /**
@@ -204,16 +209,20 @@ static void ConfigureLeds(void) {
 
 static void ConfigureKeys(void) {
     Chip_SCU_PinMuxSet(TEC_1_PORT, TEC_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_1_FUNC);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT, false);
+    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT, false);
+    on_led_rojo_k = DigitalInputCreate(TEC_1_GPIO, TEC_1_BIT, true);
 
     Chip_SCU_PinMuxSet(TEC_2_PORT, TEC_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_2_FUNC);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT, false);
+    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT, false);
+    off_led_rojo_k = DigitalInputCreate(TEC_2_GPIO, TEC_2_BIT, true);
 
     Chip_SCU_PinMuxSet(TEC_3_PORT, TEC_3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_3_FUNC);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_3_GPIO, TEC_3_BIT, false);
+    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_3_GPIO, TEC_3_BIT, false);
+    toggle_led_amarillo_k = DigitalInputCreate(TEC_3_GPIO, TEC_3_BIT, true);
 
     Chip_SCU_PinMuxSet(TEC_4_PORT, TEC_4_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_4_FUNC);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT, false);
+    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT, false);
+    test_led_verde_k = DigitalInputCreate(TEC_4_GPIO, TEC_4_BIT, true);
 }
 
 static void FlashLed(void) {
@@ -251,18 +260,20 @@ static void FlashLed(void) {
 }
 
 static void SwitchLed(void) {
-    if (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT) == 0) {
+    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT) == 0
+        DigitalInputHasActivated(on_led_rojo_k)) {
         //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, true);
         DigitalOutputActivate(led_rojo);
     }
-    if (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT) == 0) {
+    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT) == 0
+        DigitalInputHasActivated(off_led_rojo_k)) {
         //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, false);
         DigitalOutputDeactivate(led_rojo);
     }
 }
 
 static void ToggleLed(void) {
-    static bool last_state = false;
+    /*static bool last_state = false;
     bool current_state;
 
     current_state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_3_GPIO, TEC_3_BIT) == 0);
@@ -270,11 +281,16 @@ static void ToggleLed(void) {
         //Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, LED_2_GPIO, LED_2_BIT);
         DigitalOutputToggle(led_amarillo);
     }
-    last_state = current_state;
+    last_state = current_state;*/
+
+    if (DigitalInputHasActivated(toggle_led_amarillo_k)) {
+        DigitalOutputToggle(led_amarillo);
+    }
 }
 
 static void TestLed(void) {
-    if (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT) == 0) {
+    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT) == 0
+        DigitalInputGetState(test_led_verde_k)) {
         //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_3_GPIO, LED_3_BIT, true);
         DigitalOutputActivate(led_verde);
     } else {
@@ -300,10 +316,16 @@ int main(void) {
     ConfigureKeys();
 
     while (true) {
+
         FlashLed();
         SwitchLed();
         ToggleLed();
         TestLed();
+
+        DigitalInputUpdate(on_led_rojo_k);
+        DigitalInputUpdate(off_led_rojo_k);
+        DigitalInputUpdate(toggle_led_amarillo_k);
+        DigitalInputUpdate(test_led_verde_k);
 
         Delay();
     }
