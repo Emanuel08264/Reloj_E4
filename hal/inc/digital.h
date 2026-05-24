@@ -96,7 +96,8 @@ void DigitalOutputToggle(digital_output_t output);
  */
 bool DigitalOutputGetState(digital_output_t output);
 
-/** @brief Crea y configura una entrada digital
+/** 
+ * @brief Crea y configura una entrada digital
  *
  * @param port  Puerto GPIO al que pertenece el pin
  * @param pin   Número de bit dentro del puerto GPIO
@@ -105,14 +106,17 @@ bool DigitalOutputGetState(digital_output_t output);
  */
 digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted);
 
-/** @brief Obtiene el estado de una entrada digital
+/** 
+ * @brief Obtiene el estado de una entrada digital
  *
  * @param input  Entrada digital de la cual obtener el estado
  * @return true si la entrada está activa, false en caso contrario
  */
 bool DigitalInputGetState(digital_input_t input);
 
-/** @brief Actualiza el estado interno de una entrada digital, para detectar cambios
+/** 
+ * @brief Actualiza el estado interno de una entrada digital, para detectar cambios
+ * 
  * @warning Esta función debe ser llamada al final de cada iteración del programa principal, 
  * después de procesar las entradas digitales, para detectar cambios en la siguiente iteración
  *
@@ -120,21 +124,24 @@ bool DigitalInputGetState(digital_input_t input);
  */
 void DigitalInputUpdate(digital_input_t input);
 
-/** @brief Verifica si el estado de una entrada digital ha cambiado desde la última actualización
+/** 
+ * @brief Verifica si el estado de una entrada digital ha cambiado desde la última actualización
  *
  * @param input  Entrada digital a verificar
  * @return true si el estado ha cambiado, false en caso contrario
  */
 bool DigitalInputHasChanged(digital_input_t input);
 
-/** @brief Verifica si una entrada digital ha sido activada desde la última actualización
+/** 
+ * @brief Verifica si una entrada digital ha sido activada desde la última actualización
  *
  * @param input  Entrada digital a verificar
  * @return true si la entrada ha sido activada, false en caso contrario
  */
 bool DigitalInputHasActivated(digital_input_t input);
 
-/** @brief Verifica si una entrada digital ha sido desactivada desde la última actualización
+/** 
+ * @brief Verifica si una entrada digital ha sido desactivada desde la última actualización
  * @param input  Entrada digital a verificar
  * @return true si la entrada ha sido desactivada, false en caso contrario
  */

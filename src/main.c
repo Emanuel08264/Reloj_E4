@@ -1,9 +1,9 @@
-/************************************************************************************************
-Copyright (c) 2022-2023, Laboratorio de Microprocesadores
-Facultad de Ciencias Exactas y Tecnología, Universidad Nacional de Tucumán
-https://www.microprocesadores.unt.edu.ar/
+/*********************************************************************************************************************
+Copyright 2026, Electronica 4
+Facultad de Ciencias Exactas y Tecnología
+Universidad Nacional de Tucuman
 
-Copyright (c) 2022-2023, Esteban Volentini <evolentini@herrera.unt.edu.ar>
+Copyright 2026, Emanuel Santillan <emanuelsantillan209gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -31,77 +31,11 @@ SPDX-License-Identifier: MIT
 
 /* === Headers files inclusions =============================================================== */
 
-#ifndef EDU_CIAA_NXP
-#error "This program can only be compiled for the EDU-CIAA-NXP board"
-#endif
-
-#include "board.h"
-#include "chip.h"
 #include <stdio.h>
 
-#include "digital.h"
+#include "placa.h"
 
 /* === Macros definitions ====================================================================== */
-
-#define LED_R_PORT 2
-#define LED_R_PIN  0
-#define LED_R_FUNC SCU_MODE_FUNC4
-#define LED_R_GPIO 5
-#define LED_R_BIT  0
-
-#define LED_G_PORT 2
-#define LED_G_PIN  1
-#define LED_G_FUNC SCU_MODE_FUNC4
-#define LED_G_GPIO 5
-#define LED_G_BIT  1
-
-#define LED_B_PORT 2
-#define LED_B_PIN  2
-#define LED_B_FUNC SCU_MODE_FUNC4
-#define LED_B_GPIO 5
-#define LED_B_BIT  2
-
-#define LED_1_PORT 2
-#define LED_1_PIN  10
-#define LED_1_FUNC SCU_MODE_FUNC0
-#define LED_1_GPIO 0
-#define LED_1_BIT  14
-
-#define LED_2_PORT 2
-#define LED_2_PIN  11
-#define LED_2_FUNC SCU_MODE_FUNC0
-#define LED_2_GPIO 1
-#define LED_2_BIT  11
-
-#define LED_3_PORT 2
-#define LED_3_PIN  12
-#define LED_3_FUNC SCU_MODE_FUNC0
-#define LED_3_GPIO 1
-#define LED_3_BIT  12
-
-#define TEC_1_PORT 1
-#define TEC_1_PIN  0
-#define TEC_1_FUNC SCU_MODE_FUNC0
-#define TEC_1_GPIO 0
-#define TEC_1_BIT  4
-
-#define TEC_2_PORT 1
-#define TEC_2_PIN  1
-#define TEC_2_FUNC SCU_MODE_FUNC0
-#define TEC_2_GPIO 0
-#define TEC_2_BIT  8
-
-#define TEC_3_PORT 1
-#define TEC_3_PIN  2
-#define TEC_3_FUNC SCU_MODE_FUNC0
-#define TEC_3_GPIO 0
-#define TEC_3_BIT  9
-
-#define TEC_4_PORT 1
-#define TEC_4_PIN  6
-#define TEC_4_FUNC SCU_MODE_FUNC0
-#define TEC_4_GPIO 1
-#define TEC_4_BIT  9
 
 /* === Private data type declarations ========================================================== */
 
@@ -119,49 +53,27 @@ typedef enum rgb_color_e {
 
 /* === Private variable declarations =========================================================== */
 
-digital_output_t led_verde;
-digital_output_t led_amarillo;
-digital_output_t led_rojo;
-digital_output_t rgb_red;
-digital_output_t rgb_green;
-digital_output_t rgb_blue;
-
-digital_input_t on_led_rojo_k;
-digital_input_t off_led_rojo_k;
-digital_input_t toggle_led_amarillo_k;
-digital_input_t test_led_verde_k;
-
 /* === Private function declarations =========================================================== */
-
-/**
- * @brief Function to configure pins and gpio bits used by board leds
- */
-static void ConfigureLeds(void);
-
-/**
- * @brief Function to configure pins and gpio bits used by board keys
- */
-static void ConfigureKeys(void);
 
 /**
  * @brief Function to flash RGB led in sequence
  */
-static void FlashLed(void);
+static void FlashLed(board_t self);
 
 /**
  * @brief Function to switch on and off a led with two keys
  */
-static void SwitchLed(void);
+static void SwitchLed(board_t self);
 
 /**
  * @brief Function to switch on and off a led with a single key
  */
-static void ToggleLed(void);
+static void ToggleLed(board_t self);
 
 /**
  * @brief Function to turn on a led while a key is pressed
  */
-static void TestLed(void);
+static void TestLed(board_t self);
 
 /**
  * @brief Function to generate a delay of approximately 100 ms
@@ -174,58 +86,7 @@ static void Delay(void);
 
 /* === Private function implementation ========================================================= */
 
-static void ConfigureLeds(void) {
-    Chip_SCU_PinMuxSet(LED_R_PORT, LED_R_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_R_FUNC);
-    rgb_red = DigitalOutputCreate(LED_R_GPIO, LED_R_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, true);
-
-    Chip_SCU_PinMuxSet(LED_G_PORT, LED_G_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_G_FUNC);
-    rgb_green = DigitalOutputCreate(LED_G_GPIO, LED_G_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, true);
-
-    Chip_SCU_PinMuxSet(LED_B_PORT, LED_B_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_B_FUNC);
-    rgb_blue = DigitalOutputCreate(LED_B_GPIO, LED_B_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_B_GPIO, LED_B_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_B_GPIO, LED_B_BIT, true);
-
-    /******************/
-    Chip_SCU_PinMuxSet(LED_1_PORT, LED_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_1_FUNC);
-    led_rojo = DigitalOutputCreate(LED_1_GPIO, LED_1_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, true);
-
-    Chip_SCU_PinMuxSet(LED_2_PORT, LED_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_2_FUNC);
-    led_amarillo = DigitalOutputCreate(LED_2_GPIO, LED_2_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_2_GPIO, LED_2_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_2_GPIO, LED_2_BIT, true);
-
-    Chip_SCU_PinMuxSet(LED_3_PORT, LED_3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_3_FUNC);
-    led_verde = DigitalOutputCreate(LED_3_GPIO, LED_3_BIT, false);
-    //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_3_GPIO, LED_3_BIT, false);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, LED_3_GPIO, LED_3_BIT, true);
-}
-
-static void ConfigureKeys(void) {
-    Chip_SCU_PinMuxSet(TEC_1_PORT, TEC_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_1_FUNC);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT, false);
-    on_led_rojo_k = DigitalInputCreate(TEC_1_GPIO, TEC_1_BIT, true);
-
-    Chip_SCU_PinMuxSet(TEC_2_PORT, TEC_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_2_FUNC);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT, false);
-    off_led_rojo_k = DigitalInputCreate(TEC_2_GPIO, TEC_2_BIT, true);
-
-    Chip_SCU_PinMuxSet(TEC_3_PORT, TEC_3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_3_FUNC);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_3_GPIO, TEC_3_BIT, false);
-    toggle_led_amarillo_k = DigitalInputCreate(TEC_3_GPIO, TEC_3_BIT, true);
-
-    Chip_SCU_PinMuxSet(TEC_4_PORT, TEC_4_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_4_FUNC);
-    //Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT, false);
-    test_led_verde_k = DigitalInputCreate(TEC_4_GPIO, TEC_4_BIT, true);
-}
-
-static void FlashLed(void) {
+static void FlashLed(board_t self) {
     static int divisor = 0;
     static rgb_color_t state = LED_BLUE_OFF;
 
@@ -236,66 +97,43 @@ static void FlashLed(void) {
 
         switch (state) {
         case LED_RED_ON:
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, true);
-            DigitalOutputActivate(rgb_red);
+            DigitalOutputActivate(self->rgb_red);
             break;
         case LED_GREEN_ON:
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, true);
-            DigitalOutputActivate(rgb_green);
+            DigitalOutputActivate(self->rgb_green);
             break;
         case LED_BLUE_ON:
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_B_GPIO, LED_B_BIT, true);
-            DigitalOutputActivate(rgb_blue);
+            DigitalOutputActivate(self->rgb_blue);
             break;
         default:
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_R_GPIO, LED_R_BIT, false);
-            DigitalOutputDeactivate(rgb_red);
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_G_GPIO, LED_G_BIT, false);
-            DigitalOutputDeactivate(rgb_green);
-            //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_B_GPIO, LED_B_BIT, false);
-            DigitalOutputDeactivate(rgb_blue);
+            DigitalOutputDeactivate(self->rgb_red);
+            DigitalOutputDeactivate(self->rgb_green);
+            DigitalOutputDeactivate(self->rgb_blue);
             break;
         }
     }
 }
 
-static void SwitchLed(void) {
-    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT) == 0
-        DigitalInputHasActivated(on_led_rojo_k)) {
-        //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, true);
-        DigitalOutputActivate(led_rojo);
+static void SwitchLed(board_t self) {
+    if (DigitalInputHasActivated(self->on_led_rojo_k)) {
+        DigitalOutputActivate(self->led_rojo);
     }
-    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT) == 0
-        DigitalInputHasActivated(off_led_rojo_k)) {
-        //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT, false);
-        DigitalOutputDeactivate(led_rojo);
+    if (DigitalInputHasActivated(self->off_led_rojo_k)) {
+        DigitalOutputDeactivate(self->led_rojo);
     }
 }
 
-static void ToggleLed(void) {
-    /*static bool last_state = false;
-    bool current_state;
-
-    current_state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_3_GPIO, TEC_3_BIT) == 0);
-    if ((current_state) && (!last_state)) {
-        //Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, LED_2_GPIO, LED_2_BIT);
-        DigitalOutputToggle(led_amarillo);
-    }
-    last_state = current_state;*/
-
-    if (DigitalInputHasActivated(toggle_led_amarillo_k)) {
-        DigitalOutputToggle(led_amarillo);
+static void ToggleLed(board_t self) {
+    if (DigitalInputHasActivated(self->toggle_led_amarillo_k)) {
+        DigitalOutputToggle(self->led_amarillo);
     }
 }
 
-static void TestLed(void) {
-    if (//Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_4_GPIO, TEC_4_BIT) == 0
-        DigitalInputGetState(test_led_verde_k)) {
-        //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_3_GPIO, LED_3_BIT, true);
-        DigitalOutputActivate(led_verde);
+static void TestLed(board_t self) {
+    if (DigitalInputGetState(self->test_led_verde_k)) {
+        DigitalOutputActivate(self->led_verde);
     } else {
-        //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_3_GPIO, LED_3_BIT, false);
-        DigitalOutputDeactivate(led_verde);
+        DigitalOutputDeactivate(self->led_verde);
     }
 }
 
@@ -311,21 +149,19 @@ static void Delay(void) {
 
 int main(void) {
 
-    BoardSetup();
-    ConfigureLeds();
-    ConfigureKeys();
+    board_t placa = BoardCreate();
 
     while (true) {
 
-        FlashLed();
-        SwitchLed();
-        ToggleLed();
-        TestLed();
+        FlashLed(placa);
+        SwitchLed(placa);
+        ToggleLed(placa);
+        TestLed(placa);
 
-        DigitalInputUpdate(on_led_rojo_k);
-        DigitalInputUpdate(off_led_rojo_k);
-        DigitalInputUpdate(toggle_led_amarillo_k);
-        DigitalInputUpdate(test_led_verde_k);
+        DigitalInputUpdate(placa->on_led_rojo_k);
+        DigitalInputUpdate(placa->off_led_rojo_k);
+        DigitalInputUpdate(placa->toggle_led_amarillo_k);
+        DigitalInputUpdate(placa->test_led_verde_k);
 
         Delay();
     }
