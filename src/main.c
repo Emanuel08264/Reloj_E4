@@ -23,15 +23,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
-/** \brief EDU-CIAA-NXP board sample application
- **
- ** \addtogroup samples Samples
- ** \brief Samples applications with MUJU Framwork
- ** @{ */
-
 /* === Headers files inclusions =============================================================== */
 
-#include "placa.h"
+#include "bsp.h"
 
 /* === Macros definitions ====================================================================== */
 
@@ -41,62 +35,11 @@ SPDX-License-Identifier: MIT
 
 /* === Private function declarations =========================================================== */
 
-/**
- * @brief Function to switch on and off a led with two keys
- */
-static void SwitchLed(board_t self);
-
-/**
- * @brief Function to switch on and off a led with a single key
- */
-static void ToggleLed(board_t self);
-
-/**
- * @brief Function to turn on a led while a key is pressed
- */
-static void TestLed(board_t self);
-
-/**
- * @brief Function to generate a delay of approximately 100 ms
- */
-static void Delay(void);
-
 /* === Public variable definitions ============================================================= */
 
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
-
-static void SwitchLed(board_t self) {
-    if (DigitalInputHasActivated(self->on_led_rojo_k)) {
-        DigitalOutputActivate(self->led_rojo);
-    }
-    if (DigitalInputHasActivated(self->off_led_rojo_k)) {
-        DigitalOutputDeactivate(self->led_rojo);
-    }
-}
-
-static void ToggleLed(board_t self) {
-    if (DigitalInputHasActivated(self->toggle_led_amarillo_k)) {
-        DigitalOutputToggle(self->led_amarillo);
-    }
-}
-
-static void TestLed(board_t self) {
-    if (DigitalInputGetState(self->test_led_verde_k)) {
-        DigitalOutputActivate(self->led_verde);
-    } else {
-        DigitalOutputDeactivate(self->led_verde);
-    }
-}
-
-static void Delay(void) {
-    for (int index = 0; index < 100; index++) {
-        for (int delay = 0; delay < 25000; delay++) {
-            __asm("NOP");
-        }
-    }
-}
 
 /* === Public function implementation ========================================================== */
 
@@ -106,13 +49,6 @@ int main(void) {
 
     while (true) {
 
-        SwitchLed(placa);
-        ToggleLed(placa);
-        TestLed(placa);
-
-        UpdateAllInputs(placa);
-
-        Delay();
     }
 
     return 0;
