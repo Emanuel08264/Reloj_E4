@@ -35,6 +35,7 @@ SPDX-License-Identifier: MIT
 /* === Headers files inclusions ==================================================================================== */
 
 #include "digital.h"
+#include "poncho.h"
 
 /* === Header for C++ compatibility ================================================================================ */
 
@@ -53,14 +54,13 @@ typedef struct board_s{
     digital_output_t led_rojo;
     digital_output_t led_amarillo;
 
-    digital_output_t rgb_red;
-    digital_output_t rgb_green;
-    digital_output_t rgb_blue;
-
     digital_input_t on_led_rojo_k;
     digital_input_t off_led_rojo_k;
     digital_input_t toggle_led_amarillo_k;
     digital_input_t test_led_verde_k;
+
+    digital_input_t test_aceptar;
+    digital_input_t test_cancelar;
 
 } const * const board_t;
 
@@ -74,6 +74,8 @@ typedef struct board_s{
  * @return Puntero a la estructura que representa la placa de desarrollo
  */
 board_t BoardCreate(void);
+
+void UpdateAllInputs(board_t self);
 
 /* === End of conditional blocks =================================================================================== */
 

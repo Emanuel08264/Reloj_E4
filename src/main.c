@@ -31,34 +31,15 @@ SPDX-License-Identifier: MIT
 
 /* === Headers files inclusions =============================================================== */
 
-#include <stdio.h>
-
 #include "placa.h"
 
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
 
-/**
- * @brief Enumeration with color sequence of RGB led
- */
-typedef enum rgb_color_e {
-    LED_RED_ON = 0,
-    LED_RED_OFF,
-    LED_GREEN_ON,
-    LED_GREEN_OFF,
-    LED_BLUE_ON,
-    LED_BLUE_OFF,
-} rgb_color_t;
-
 /* === Private variable declarations =========================================================== */
 
 /* === Private function declarations =========================================================== */
-
-/**
- * @brief Function to flash RGB led in sequence
- */
-static void FlashLed(board_t self);
 
 /**
  * @brief Function to switch on and off a led with two keys
@@ -85,34 +66,6 @@ static void Delay(void);
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
-
-static void FlashLed(board_t self) {
-    static int divisor = 0;
-    static rgb_color_t state = LED_BLUE_OFF;
-
-    divisor++;
-    if (divisor == 5) {
-        divisor = 0;
-        state = (state + 1) % (LED_BLUE_OFF + 1);
-
-        switch (state) {
-        case LED_RED_ON:
-            DigitalOutputActivate(self->rgb_red);
-            break;
-        case LED_GREEN_ON:
-            DigitalOutputActivate(self->rgb_green);
-            break;
-        case LED_BLUE_ON:
-            DigitalOutputActivate(self->rgb_blue);
-            break;
-        default:
-            DigitalOutputDeactivate(self->rgb_red);
-            DigitalOutputDeactivate(self->rgb_green);
-            DigitalOutputDeactivate(self->rgb_blue);
-            break;
-        }
-    }
-}
 
 static void SwitchLed(board_t self) {
     if (DigitalInputHasActivated(self->on_led_rojo_k)) {
@@ -153,15 +106,11 @@ int main(void) {
 
     while (true) {
 
-        FlashLed(placa);
         SwitchLed(placa);
         ToggleLed(placa);
         TestLed(placa);
 
-        DigitalInputUpdate(placa->on_led_rojo_k);
-        DigitalInputUpdate(placa->off_led_rojo_k);
-        DigitalInputUpdate(placa->toggle_led_amarillo_k);
-        DigitalInputUpdate(placa->test_led_verde_k);
+        UpdateAllInputs(placa);
 
         Delay();
     }

@@ -123,14 +123,6 @@ static void ConfigureKeys(struct board_s *self);
 /* === Private function definitions ============================================================ */
 
 static void ConfigureLeds(struct board_s *self) {
-    Chip_SCU_PinMuxSet(LED_R_PORT, LED_R_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_R_FUNC);
-    self->rgb_red = DigitalOutputCreate(LED_R_GPIO, LED_R_BIT, false);
-
-    Chip_SCU_PinMuxSet(LED_G_PORT, LED_G_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_G_FUNC);
-    self->rgb_green = DigitalOutputCreate(LED_G_GPIO, LED_G_BIT, false);
-
-    Chip_SCU_PinMuxSet(LED_B_PORT, LED_B_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_B_FUNC);
-    self->rgb_blue = DigitalOutputCreate(LED_B_GPIO, LED_B_BIT, false);
 
     Chip_SCU_PinMuxSet(LED_1_PORT, LED_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | LED_1_FUNC);
     self->led_rojo = DigitalOutputCreate(LED_1_GPIO, LED_1_BIT, false);
@@ -143,17 +135,23 @@ static void ConfigureLeds(struct board_s *self) {
 }
 
 static void ConfigureKeys(struct board_s *self) {
-    Chip_SCU_PinMuxSet(TEC_1_PORT, TEC_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_1_FUNC);
-    self->on_led_rojo_k = DigitalInputCreate(TEC_1_GPIO, TEC_1_BIT, true);
+    Chip_SCU_PinMuxSet(KEY_F4_PORT, KEY_F4_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F4_FUNC);
+    self->on_led_rojo_k = DigitalInputCreate(KEY_F4_GPIO, KEY_F4_BIT, SPIFI_FIELDFORM_ALL_SERIAL);
 
-    Chip_SCU_PinMuxSet(TEC_2_PORT, TEC_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_2_FUNC);
-    self->off_led_rojo_k = DigitalInputCreate(TEC_2_GPIO, TEC_2_BIT, true);
+    Chip_SCU_PinMuxSet(KEY_F3_PORT, KEY_F3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F3_FUNC);
+    self->off_led_rojo_k = DigitalInputCreate(KEY_F3_GPIO, KEY_F3_BIT, false);
 
-    Chip_SCU_PinMuxSet(TEC_3_PORT, TEC_3_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_3_FUNC);
-    self->toggle_led_amarillo_k = DigitalInputCreate(TEC_3_GPIO, TEC_3_BIT, true);
+    Chip_SCU_PinMuxSet(KEY_F2_PORT, KEY_F2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F2_FUNC);
+    self->toggle_led_amarillo_k = DigitalInputCreate(KEY_F2_GPIO, KEY_F2_BIT, false);
 
-    Chip_SCU_PinMuxSet(TEC_4_PORT, TEC_4_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_4_FUNC);
-    self->test_led_verde_k = DigitalInputCreate(TEC_4_GPIO, TEC_4_BIT, true);
+    Chip_SCU_PinMuxSet(KEY_F1_PORT, KEY_F1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_F1_FUNC);
+    self->test_led_verde_k = DigitalInputCreate(KEY_F1_GPIO, KEY_F1_BIT, false);
+
+    Chip_SCU_PinMuxSet(KEY_ACCEPT_PORT, KEY_ACCEPT_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_ACCEPT_FUNC);
+    self->test_aceptar = DigitalInputCreate(KEY_ACCEPT_GPIO, KEY_ACCEPT_BIT, false);
+
+    Chip_SCU_PinMuxSet(KEY_CANCEL_PORT, KEY_CANCEL_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | KEY_CANCEL_FUNC);
+    self->test_cancelar = DigitalInputCreate(KEY_CANCEL_GPIO, KEY_CANCEL_BIT, false);
 }
 
 /* === Public function implementation ========================================================== */
@@ -168,6 +166,15 @@ board_t BoardCreate(void) {
     ConfigureKeys(&self);
 
     return &self;
+}
+
+void UpdateAllInputs(board_t self) {
+    DigitalInputUpdate(self->on_led_rojo_k);
+    DigitalInputUpdate(self->off_led_rojo_k);
+    DigitalInputUpdate(self->toggle_led_amarillo_k);
+    DigitalInputUpdate(self->test_led_verde_k);
+    DigitalInputUpdate(self->test_aceptar);
+    DigitalInputUpdate(self->test_cancelar);
 }
 
 /* === End of documentation ==================================================================== */
