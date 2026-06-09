@@ -26,6 +26,7 @@ SPDX-License-Identifier: MIT
 /* === Headers files inclusions =============================================================== */
 
 #include "bsp.h"
+#include "screen.h"
 
 /* === Macros definitions ====================================================================== */
 
@@ -35,11 +36,19 @@ SPDX-License-Identifier: MIT
 
 /* === Private function declarations =========================================================== */
 
+static void Delay(void);
+
 /* === Public variable definitions ============================================================= */
 
 /* === Private variable definitions ============================================================ */
 
 /* === Private function implementation ========================================================= */
+
+static void Delay(void) {
+    for (volatile int i = 0; i < 5000; i++) {
+        __asm__("nop");
+    }
+}
 
 /* === Public function implementation ========================================================== */
 
@@ -47,8 +56,14 @@ int main(void) {
 
     board_t placa = BoardCreate();
 
-    while (true) {
+    uint8_t test_number[] = {6, 7, 6, 7};
 
+    DisplayWriteBCD(placa->display, test_number, sizeof(test_number));
+
+    while (true) {
+        UpdateAllInputs(placa);
+        DisplayRefresh(placa->display);
+        Delay();
     }
 
     return 0;
