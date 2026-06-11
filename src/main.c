@@ -53,22 +53,102 @@ static void Delay(void) {
 /* === Public function implementation ========================================================== */
 
 int main(void) {
-
     board_t placa = BoardCreate();
 
-    uint8_t test_number[] = {6, 7, 6, 7};
+    uint8_t init_number[] = {6, 7, 6, 7};
+    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
 
-    DisplayWriteBCD(placa->display, test_number, sizeof(test_number));
+    int8_t editing_digit = -1;
+    uint32_t delay_anti_rebote = 0;
 
     while (true) {
-        UpdateAllInputs(placa);
-        DisplayRefresh(placa->display);
+
+        delay_anti_rebote++;
+        if (delay_anti_rebote >= 50) {
+            delay_anti_rebote = 0;
+
+            bool mode_has_changed = false;
+
+            if (DigitalInputHasActivated(placa->f4)) {
+                if (editing_digit == 0) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 0;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f3)) {
+                if (editing_digit == 1) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 1;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f2)) {
+                if (editing_digit == 2) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 2;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f1)) {
+                if (editing_digit == 3) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 3;
+                }
+                mode_has_changed = true;
+            }
+
+            if (mode_has_changed) {
+                if (editing_digit != -1) {
+                    DisplayFlashDigits(placa->display, editing_digit, editing_digit, 50);
+                } else {
+                    DisplayFlashDigits(placa->display, 0, 0, 0);
+                }
+            }
+
+            if (editing_digit != -1) {
+                bool digit_has_changed = false;
+
+                if (DigitalInputHasActivated(placa->accept)) {
+                    if (init_number[editing_digit] < 9) {
+                        init_number[editing_digit]++;
+                    } else {
+                        init_number[editing_digit] = 0;
+                    }
+                    digit_has_changed = true;
+                }
+
+                if (DigitalInputHasActivated(placa->cancel)) {
+                    if (init_number[editing_digit] > 0) {
+                        init_number[editing_digit]--;
+                    } else {
+                        init_number[editing_digit] = 9;
+                    }
+                    digit_has_changed = true;
+                }
+
+                if (init_number[editing_digit] == 0) {
+                    DisplayToggleDots(placa->display, editing_digit, editing_digit);
+                }
+
+                if (digit_has_changed) {
+                    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
+                }
+            }
+
+            UpdateAllInputs(placa);
+        }
+
         Delay();
+        DisplayRefresh(placa->display);
     }
 
     return 0;
 }
-
 /* === End of documentation ==================================================================== */
 
 /** @} End of module definition for doxygen */

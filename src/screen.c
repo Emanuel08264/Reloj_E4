@@ -37,24 +37,38 @@ SPDX-License-Identifier: MIT
 
 /* === Macros definitions ====================================================================== */
 
-#define N_DIGITS              4
-#define DISPLAY_MAX_INSTANCES 1
+#ifndef DISPLAY_MAX_DIGITS
+#define DISPLAY_MAX_DIGITS 4 // Máximo de dígitos
+#endif
+
+#ifndef DISPLAY_MAX_INSTANCES
+#define DISPLAY_MAX_INSTANCES 1 // Máximo de pantallas simultáneas
+#endif
 
 /* === Private data type declarations ========================================================== */
 
+/** * @brief Estructura con el estado de una instancia de pantalla multiplexada
+ *
+ * * Contiene la memoria de video (VRAM), los punteros al hardware y las
+ * variables de estado necesarias para gestionar el parpadeo de forma asíncrona.
+ */
 struct display_s {
-    uint8_t digit;
-    uint8_t vram[N_DIGITS];
-    bool ocupado;
-    struct display_driver_s driver[1];
-    uint8_t flash_from;       // digito desde el cual se va a iniciar el parpadeo
-    uint8_t flash_to;         // digito hasta el cual se va a finalizar el parpadeo
-    uint16_t flash_frecuency; // frecuencia de parpadeo en Hz
-    uint16_t flash_counter;   // contador para llevar el tiempo de parpadeo
+    uint8_t digits;                    /**< Cantidad de dígitos configurados */
+    uint8_t active_digit;              /**< Índice del dígito actualmente encendido en el barrido */
+    uint8_t vram[DISPLAY_MAX_DIGITS];  /**< Memoria de video con el mapa de bits de cada segmento */
+    bool ocupado;                      /**< Bandera para indicar si la instancia está en uso */
+    struct display_driver_s driver[1]; /**< Punteros a las funciones de bajo nivel del hardware */
+    uint8_t flash_from;                /**< Índice del primer dígito que debe parpadear */
+    uint8_t flash_to;                  /**< Índice del último dígito que debe parpadear */
+    uint16_t flash_frecuency;          /**< Frecuencia de parpadeo configurada por el usuario */
+    uint16_t flash_counter;            /**< Contador interno para medir el tiempo de parpadeo */
 };
 
 /* === Private function declarations =========================================================== */
 
+/** *@brief Funcion que reserva memoria estatica para el maximo de instancias permitidas de display_s
+ *
+ */
 static display_t DisplayAllocate(void) {
     display_t self = NULL;
     static struct display_s instances[DISPLAY_MAX_INSTANCES] = {0};
@@ -70,6 +84,9 @@ static display_t DisplayAllocate(void) {
 
 /* === Private variable definitions ============================================================ */
 
+/** *@brief Arreglo que codifica los 7 segmentos. Contiene los numeros 0 a 9, y la letra de error E en la posicion 10.
+ *
+ */
 static const uint8_t lut[] = {
     SEGMENT_A | SEGMENT_B | SEGMENT_C | SEGMENT_D | SEGMENT_E | SEGMENT_F,             // 0
     SEGMENT_B | SEGMENT_C,                                                             // 1
@@ -91,10 +108,16 @@ static const uint8_t lut[] = {
 /* === Public function implementation ========================================================== */
 
 display_t DisplayCreate(uint8_t digits, display_driver_t driver) {
+
+    if (driver == NULL) {
+        return NULL;
+    }
+
     display_t self = DisplayAllocate();
 
     if (self != NULL) {
-        self->digit = 0;
+        self->digits = digits;
+        self->active_digit = 0;
         memcpy(self->driver, driver, sizeof(struct display_driver_s));
         memset(self->vram, 0, sizeof(self->vram));
         self->flash_from = 0;
@@ -109,7 +132,7 @@ display_t DisplayCreate(uint8_t digits, display_driver_t driver) {
 void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size) {
     memset(display->vram, 0, sizeof(display->vram));
     for (int i = 0; i < size; i++) {
-        if (i >= N_DIGITS) {
+        if (i >= display->digits) {
             break;
         }
         if (number[i] < 10) {
@@ -124,35 +147,35 @@ void DisplayRefresh(display_t display) {
 
     display->driver->UpdateSegments(0);
 
-    uint8_t segments_to_light = display->vram[display->digit];
+    uint8_t segments_to_light = display->vram[display->active_digit];
 
     if (display->flash_frecuency > 0) {
-        if (display->flash_from <= display->digit && display->digit <= display->flash_to) {
+        if (display->flash_from <= display->active_digit && display->active_digit <= display->flash_to) {
             if (display->flash_counter >= display->flash_frecuency / 2) {
                 segments_to_light = 0;
             }
         }
     }
 
-    if (display->digit == 0 && display->flash_frecuency > 0) {
+    if (display->active_digit == 0 && display->flash_frecuency > 0) {
         display->flash_counter++;
         if (display->flash_counter >= display->flash_frecuency) {
             display->flash_counter = 0;
         }
     }
 
-    display->driver->UpdateDigits(display->digit);
+    display->driver->UpdateDigits(display->active_digit);
     display->driver->UpdateSegments(segments_to_light);
 
-    display->digit++;
-    if (display->digit >= N_DIGITS) {
-        display->digit = 0;
+    display->active_digit++;
+    if (display->active_digit >= display->digits) {
+        display->active_digit = 0;
     }
 }
 
 void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t frecuency) {
-    if (from >= N_DIGITS || to >= N_DIGITS || from > to) {
-        for (int i = 0; i < N_DIGITS; i++) {
+    if (from >= display->digits || to >= display->digits || from > to) {
+        for (int i = 0; i < display->digits; i++) {
             display->vram[i] = lut[10];
         }
         display->flash_from = 0;
@@ -168,11 +191,11 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
 }
 
 void DisplayToggleDots(display_t display, uint8_t from, uint8_t to) {
-    if (from >= N_DIGITS) {
-        from = N_DIGITS - 1;
+    if (from >= display->digits) {
+        from = display->digits - 1;
     }
-    if (to >= N_DIGITS) {
-        to = N_DIGITS - 1;
+    if (to >= display->digits) {
+        to = display->digits - 1;
     }
 
     for (int i = from; i <= to; i++) {

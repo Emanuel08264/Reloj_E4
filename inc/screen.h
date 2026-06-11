@@ -115,6 +115,7 @@ display_t DisplayCreate(uint8_t digits, display_driver_t driver);
  * @param  display  Descriptor creado con @ref DisplayCreate
  * @param  number   Puntero al primer dígito BCD (cada elemento en @c 0..9)
  * @param  size     Cantidad de dígitos en @p number
+ * @note Si el numero recibido es mayor a 9, la pantalla mostrará el patrón de error 'E'.
  */
 void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size);
 
@@ -134,6 +135,7 @@ void DisplayRefresh(display_t display);
  * @param  from       Índice del primer dígito que parpadea
  * @param  to         Índice del último dígito que parpadea
  * @param  frecuency  Divisor respecto al ciclo de refresco; @c 0 desactiva el parpadeo
+ * @note Ante errores en los parametros recibidos, muestra E en todos los digitos.
  */
 void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t frecuency);
 
@@ -143,6 +145,7 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
  * @param  display  Descriptor creado con @ref DisplayCreate
  * @param  from     Índice del primer dígito
  * @param  to       Índice del último dígito
+ * @note Si from o to mayor que digits, les asigna digits-1.
  */
 void DisplayToggleDots(display_t display, uint8_t from, uint8_t to);
 

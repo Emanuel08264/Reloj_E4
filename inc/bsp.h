@@ -48,16 +48,16 @@ extern "C" {
 /* === Public data type declarations =============================================================================== */
 
 /** @brief Tipo para representar la placa PONCHO */
-typedef struct board_s{
-    
-    digital_output_t buzzer;
-    digital_input_t f1;
-    digital_input_t f2;
-    digital_input_t f3;
-    digital_input_t f4;
-    digital_input_t accept;
-    digital_input_t cancel;
-    display_t display;
+typedef struct board_s {
+
+    digital_output_t buzzer; /**< Salida digital para el buzzer */
+    digital_input_t f1;      /**< Entrada digital para la tecla f1 */
+    digital_input_t f2;      /**< Entrada digital para la tecla f2 */
+    digital_input_t f3;      /**< Entrada digital para la tecla f3 */
+    digital_input_t f4;      /**< Entrada digital para la tecla f4 */
+    digital_input_t accept;  /**< Entrada digital para la tecla accept */
+    digital_input_t cancel;  /**< Entrada digital para la tecla cancel */
+    display_t display;       /**< Descriptor para el manejo de la pantalla de 7 segmentos */
 
 } const * const board_t;
 
@@ -65,14 +65,14 @@ typedef struct board_s{
 
 /* === Public function declarations ================================================================================ */
 
-/** 
+/**
  * @brief Crea y configura la placa de desarrollo, inicializando sus componentes
  *
  * @return Puntero a la estructura que representa la placa de desarrollo
  */
 board_t BoardCreate(void);
 
-/** 
+/**
  * @brief Actualiza el estado de todas las entradas de la placa
  *
  * @param self Puntero a la estructura que representa la placa de desarrollo
