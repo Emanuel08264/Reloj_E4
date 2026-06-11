@@ -25,16 +25,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
-#ifndef PLACA_H_
-#define PLACA_H_
+#ifndef BSP_H_
+#define BSP_H_
 
-/** @file placa.h
- ** @brief Definición de la placa de desarrollo
+/** @file bsp.h
+ ** @brief Definición de la placa de desarrollo y sus componentes
  **/
 
 /* === Headers files inclusions ==================================================================================== */
 
 #include "digital.h"
+#include "screen.h"
 
 /* === Header for C++ compatibility ================================================================================ */
 
@@ -46,21 +47,17 @@ extern "C" {
 
 /* === Public data type declarations =============================================================================== */
 
-/** @brief Tipo para representar la placa de desarrollo */
-typedef struct board_s{
-    
-    digital_output_t led_verde;
-    digital_output_t led_rojo;
-    digital_output_t led_amarillo;
+/** @brief Tipo para representar la placa PONCHO */
+typedef struct board_s {
 
-    digital_output_t rgb_red;
-    digital_output_t rgb_green;
-    digital_output_t rgb_blue;
-
-    digital_input_t on_led_rojo_k;
-    digital_input_t off_led_rojo_k;
-    digital_input_t toggle_led_amarillo_k;
-    digital_input_t test_led_verde_k;
+    digital_output_t buzzer; /**< Salida digital para el buzzer */
+    digital_input_t f1;      /**< Entrada digital para la tecla f1 */
+    digital_input_t f2;      /**< Entrada digital para la tecla f2 */
+    digital_input_t f3;      /**< Entrada digital para la tecla f3 */
+    digital_input_t f4;      /**< Entrada digital para la tecla f4 */
+    digital_input_t accept;  /**< Entrada digital para la tecla accept */
+    digital_input_t cancel;  /**< Entrada digital para la tecla cancel */
+    display_t display;       /**< Descriptor para el manejo de la pantalla de 7 segmentos */
 
 } const * const board_t;
 
@@ -68,12 +65,19 @@ typedef struct board_s{
 
 /* === Public function declarations ================================================================================ */
 
-/** 
+/**
  * @brief Crea y configura la placa de desarrollo, inicializando sus componentes
  *
  * @return Puntero a la estructura que representa la placa de desarrollo
  */
 board_t BoardCreate(void);
+
+/**
+ * @brief Actualiza el estado de todas las entradas de la placa
+ *
+ * @param self Puntero a la estructura que representa la placa de desarrollo
+ */
+void UpdateAllInputs(board_t self);
 
 /* === End of conditional blocks =================================================================================== */
 
@@ -81,4 +85,4 @@ board_t BoardCreate(void);
 }
 #endif
 
-#endif /* PLACA_H_ */
+#endif /* BSP_H_ */

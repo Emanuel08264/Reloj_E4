@@ -23,61 +23,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
-/** \brief EDU-CIAA-NXP board sample application
- **
- ** \addtogroup samples Samples
- ** \brief Samples applications with MUJU Framwork
- ** @{ */
-
 /* === Headers files inclusions =============================================================== */
 
-#include <stdio.h>
-
-#include "placa.h"
+#include "bsp.h"
+#include "screen.h"
 
 /* === Macros definitions ====================================================================== */
 
 /* === Private data type declarations ========================================================== */
 
-/**
- * @brief Enumeration with color sequence of RGB led
- */
-typedef enum rgb_color_e {
-    LED_RED_ON = 0,
-    LED_RED_OFF,
-    LED_GREEN_ON,
-    LED_GREEN_OFF,
-    LED_BLUE_ON,
-    LED_BLUE_OFF,
-} rgb_color_t;
-
 /* === Private variable declarations =========================================================== */
 
 /* === Private function declarations =========================================================== */
 
-/**
- * @brief Function to flash RGB led in sequence
- */
-static void FlashLed(board_t self);
-
-/**
- * @brief Function to switch on and off a led with two keys
- */
-static void SwitchLed(board_t self);
-
-/**
- * @brief Function to switch on and off a led with a single key
- */
-static void ToggleLed(board_t self);
-
-/**
- * @brief Function to turn on a led while a key is pressed
- */
-static void TestLed(board_t self);
-
-/**
- * @brief Function to generate a delay of approximately 100 ms
- */
 static void Delay(void);
 
 /* === Public variable definitions ============================================================= */
@@ -86,89 +44,111 @@ static void Delay(void);
 
 /* === Private function implementation ========================================================= */
 
-static void FlashLed(board_t self) {
-    static int divisor = 0;
-    static rgb_color_t state = LED_BLUE_OFF;
-
-    divisor++;
-    if (divisor == 5) {
-        divisor = 0;
-        state = (state + 1) % (LED_BLUE_OFF + 1);
-
-        switch (state) {
-        case LED_RED_ON:
-            DigitalOutputActivate(self->rgb_red);
-            break;
-        case LED_GREEN_ON:
-            DigitalOutputActivate(self->rgb_green);
-            break;
-        case LED_BLUE_ON:
-            DigitalOutputActivate(self->rgb_blue);
-            break;
-        default:
-            DigitalOutputDeactivate(self->rgb_red);
-            DigitalOutputDeactivate(self->rgb_green);
-            DigitalOutputDeactivate(self->rgb_blue);
-            break;
-        }
-    }
-}
-
-static void SwitchLed(board_t self) {
-    if (DigitalInputHasActivated(self->on_led_rojo_k)) {
-        DigitalOutputActivate(self->led_rojo);
-    }
-    if (DigitalInputHasActivated(self->off_led_rojo_k)) {
-        DigitalOutputDeactivate(self->led_rojo);
-    }
-}
-
-static void ToggleLed(board_t self) {
-    if (DigitalInputHasActivated(self->toggle_led_amarillo_k)) {
-        DigitalOutputToggle(self->led_amarillo);
-    }
-}
-
-static void TestLed(board_t self) {
-    if (DigitalInputGetState(self->test_led_verde_k)) {
-        DigitalOutputActivate(self->led_verde);
-    } else {
-        DigitalOutputDeactivate(self->led_verde);
-    }
-}
-
 static void Delay(void) {
-    for (int index = 0; index < 100; index++) {
-        for (int delay = 0; delay < 25000; delay++) {
-            __asm("NOP");
-        }
+    for (volatile int i = 0; i < 5000; i++) {
+        __asm__("nop");
     }
 }
 
 /* === Public function implementation ========================================================== */
 
 int main(void) {
-
     board_t placa = BoardCreate();
+
+    uint8_t init_number[] = {6, 7, 6, 7};
+    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
+
+    int8_t editing_digit = -1;
+    uint32_t delay_anti_rebote = 0;
 
     while (true) {
 
-        FlashLed(placa);
-        SwitchLed(placa);
-        ToggleLed(placa);
-        TestLed(placa);
+        delay_anti_rebote++;
+        if (delay_anti_rebote >= 50) {
+            delay_anti_rebote = 0;
 
-        DigitalInputUpdate(placa->on_led_rojo_k);
-        DigitalInputUpdate(placa->off_led_rojo_k);
-        DigitalInputUpdate(placa->toggle_led_amarillo_k);
-        DigitalInputUpdate(placa->test_led_verde_k);
+            bool mode_has_changed = false;
+
+            if (DigitalInputHasActivated(placa->f4)) {
+                if (editing_digit == 0) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 0;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f3)) {
+                if (editing_digit == 1) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 1;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f2)) {
+                if (editing_digit == 2) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 2;
+                }
+                mode_has_changed = true;
+            }
+            if (DigitalInputHasActivated(placa->f1)) {
+                if (editing_digit == 3) {
+                    editing_digit = -1;
+                } else {
+                    editing_digit = 3;
+                }
+                mode_has_changed = true;
+            }
+
+            if (mode_has_changed) {
+                if (editing_digit != -1) {
+                    DisplayFlashDigits(placa->display, editing_digit, editing_digit, 50);
+                } else {
+                    DisplayFlashDigits(placa->display, 0, 0, 0);
+                }
+            }
+
+            if (editing_digit != -1) {
+                bool digit_has_changed = false;
+
+                if (DigitalInputHasActivated(placa->accept)) {
+                    if (init_number[editing_digit] < 9) {
+                        init_number[editing_digit]++;
+                    } else {
+                        init_number[editing_digit] = 0;
+                    }
+                    digit_has_changed = true;
+                }
+
+                if (DigitalInputHasActivated(placa->cancel)) {
+                    if (init_number[editing_digit] > 0) {
+                        init_number[editing_digit]--;
+                    } else {
+                        init_number[editing_digit] = 9;
+                    }
+                    digit_has_changed = true;
+                }
+
+                if (init_number[editing_digit] == 0) {
+                    DisplayToggleDots(placa->display, editing_digit, editing_digit);
+                }
+
+                if (digit_has_changed) {
+                    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
+                }
+            }
+
+            UpdateAllInputs(placa);
+        }
 
         Delay();
+        DisplayRefresh(placa->display);
     }
 
     return 0;
 }
-
 /* === End of documentation ==================================================================== */
 
 /** @} End of module definition for doxygen */

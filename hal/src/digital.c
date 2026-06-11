@@ -62,7 +62,7 @@ struct digital_input_s {
 
 /* === Public function implementation ========================================================== */
 
-digital_output_t DigitalOutputCreate(int32_t port, int8_t pin, bool inverted){
+digital_output_t DigitalOutputCreate(int32_t port, int8_t pin, bool inverted) {
     digital_output_t self = NULL;
     self = malloc(sizeof(struct digital_output_s));
     if (self) {
@@ -76,19 +76,19 @@ digital_output_t DigitalOutputCreate(int32_t port, int8_t pin, bool inverted){
     return self;
 }
 
-void DigitalOutputActivate(digital_output_t self){
+void DigitalOutputActivate(digital_output_t self) {
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, self->port, self->pin, !self->inverted);
 }
 
-void DigitalOutputDeactivate(digital_output_t self){
+void DigitalOutputDeactivate(digital_output_t self) {
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, self->port, self->pin, self->inverted);
 }
 
-void DigitalOutputToggle(digital_output_t self){
+void DigitalOutputToggle(digital_output_t self) {
     Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, self->port, self->pin);
 }
 
-bool DigitalOutputGetState(digital_output_t self){
+bool DigitalOutputGetState(digital_output_t self) {
     bool state = Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, self->port, self->pin);
     if (self->inverted) {
         state = !state;
@@ -96,7 +96,7 @@ bool DigitalOutputGetState(digital_output_t self){
     return state;
 }
 
-digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted){
+digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted) {
     digital_input_t self = NULL;
     self = malloc(sizeof(struct digital_input_s));
     if (self) {
@@ -109,7 +109,7 @@ digital_input_t DigitalInputCreate(int32_t port, int8_t pin, bool inverted){
     return self;
 }
 
-bool DigitalInputGetState(digital_input_t self){
+bool DigitalInputGetState(digital_input_t self) {
     bool state = Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, self->port, self->pin);
     if (self->inverted) {
         state = !state;
@@ -117,17 +117,17 @@ bool DigitalInputGetState(digital_input_t self){
     return state;
 }
 
-void DigitalInputUpdate(digital_input_t self){
+void DigitalInputUpdate(digital_input_t self) {
     self->last_state = DigitalInputGetState(self);
 }
 
-bool DigitalInputHasChanged(digital_input_t self){
+bool DigitalInputHasChanged(digital_input_t self) {
     bool changed = (DigitalInputGetState(self) != self->last_state);
 
     return changed;
 }
 
-bool DigitalInputHasActivated(digital_input_t self){
+bool DigitalInputHasActivated(digital_input_t self) {
     bool current_state = DigitalInputGetState(self);
     bool changed = current_state != self->last_state;
     bool activated = (changed && current_state);
@@ -135,7 +135,7 @@ bool DigitalInputHasActivated(digital_input_t self){
     return activated;
 }
 
-bool DigitalInputHasDeactivated(digital_input_t self){
+bool DigitalInputHasDeactivated(digital_input_t self) {
     bool current_state = DigitalInputGetState(self);
     bool changed = current_state != self->last_state;
     bool deactivated = (changed && !current_state);
