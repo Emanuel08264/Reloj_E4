@@ -59,6 +59,8 @@ clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler);
 
 bool RelojGetCurrentTime(clock_t reloj, hora_t current_time);
 
+bool RelojSetupCurrentTime(clock_t reloj, hora_t current_time);
+
 /* === End of conditional blocks =================================================================================== */
 
 #ifdef __cplusplus
