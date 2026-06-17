@@ -67,10 +67,14 @@ bool RelojGetCurrentTime(clock_t self, hora_t current_time) {
     return self->time_is_valid;
 }
 
-bool RelojSetupCurrentTime(clock_t self, hora_t current_time) {
+bool RelojSetupCurrentTime(clock_t self, const hora_t current_time) {
     memcpy(self->current_time, current_time, sizeof(hora_t));
     self->time_is_valid = true;
     return true;
+}
+
+void RelojNewTick(clock_t self) {
+    self->current_time[5] = 3;
 }
 
 /* === End of documentation ==================================================================== */
