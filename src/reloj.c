@@ -95,7 +95,9 @@ void RelojNewTick(clock_t self) {
 
     if (incrementar_y_verificar(&self->current_time[5], 10)) {
         if (incrementar_y_verificar(&self->current_time[4], 6)) {
-            incrementar_y_verificar(&self->current_time[3], 10);
+            if (incrementar_y_verificar(&self->current_time[3], 10)) {
+                incrementar_y_verificar(&self->current_time[2], 6);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-// 10 minutos, 1 hora, 10 horas, 1 día.
+// 1 hora, 10 horas, 1 día.
 // y un dia completo. Fijar la hora de la alarma y consultarla. Fijar la alarma y avanzar el reloj hasta que suene
 // la alarma, deshabilitarla, y avanzar el reloj para que no suene. Hacer sonar la alarma y posponerla 5 min
 // y cancelarla hasta el otro día.
@@ -13,6 +13,7 @@ static const hora_t INITIAL_TIME = {0, 2, 1, 2, 1, 2};
 #define ONE_SECOND       TICKS_PER_SECOND
 #define TEN_SECONDS      (10 * ONE_SECOND)
 #define ONE_MINUTE       (60 * ONE_SECOND)
+#define TEN_MINUTES      (10 * ONE_MINUTE)
 
 void SimulateClockTicks(clock_t reloj, unsigned int ticks) {
     for (unsigned int i = 0; i < ticks; i++) {
@@ -76,6 +77,19 @@ void test_reloj_avance_un_min(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, NULL);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
     SimulateClockTicks(reloj, ONE_MINUTE);
+    RelojGetCurrentTime(reloj, hora_actual);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
+}
+
+// Despues de n ciclos la hora avanza 10 minutos
+void test_reloj_avance_diez_min(void) {
+    clock_t reloj;
+    hora_t hora_actual;
+    static const hora_t EXPECTED_TIME = {0, 2, 2, 2, 1, 2};
+
+    reloj = RelojCreate(TICKS_PER_SECOND, NULL);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+    SimulateClockTicks(reloj, TEN_MINUTES);
     RelojGetCurrentTime(reloj, hora_actual);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
