@@ -97,9 +97,12 @@ void RelojNewTick(clock_t self) {
         if (incrementar_y_verificar(&self->current_time[4], 6)) {
             if (incrementar_y_verificar(&self->current_time[3], 10)) {
                 if (incrementar_y_verificar(&self->current_time[2], 6)) {
-                    if (incrementar_y_verificar(&self->current_time[1], 10)) {
-                        incrementar_y_verificar(&self->current_time[0], 3);
+                    uint8_t horas = self->current_time[0] * 10 + self->current_time[1] + 1;
+                    if (horas >= 24) {
+                        horas = 0;
                     }
+                    self->current_time[0] = horas / 10;
+                    self->current_time[1] = horas % 10;
                 }
             }
         }

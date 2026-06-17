@@ -16,6 +16,7 @@ static const hora_t INITIAL_TIME = {0, 2, 1, 2, 1, 2};
 #define TEN_MINUTES      (10 * ONE_MINUTE)
 #define ONE_HOUR         (60 * ONE_MINUTE)
 #define TEN_HOURS        (10 * ONE_HOUR)
+#define ONE_DAY          (24 * ONE_HOUR)
 
 void SimulateClockTicks(clock_t reloj, unsigned int ticks) {
     for (unsigned int i = 0; i < ticks; i++) {
@@ -119,4 +120,15 @@ void test_reloj_avance_diez_horas(void) {
     SimulateClockTicks(reloj, TEN_HOURS);
     RelojGetCurrentTime(reloj, hora_actual);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
+}
+// Despues de n ciclos la hora avanza 1 día.
+void test_reloj_avance_un_dia(void) {
+    clock_t reloj;
+    hora_t hora_actual;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, NULL);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+    SimulateClockTicks(reloj, ONE_DAY);
+    RelojGetCurrentTime(reloj, hora_actual);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(INITIAL_TIME, hora_actual, 6);
 }
