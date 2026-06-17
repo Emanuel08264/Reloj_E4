@@ -47,12 +47,21 @@ struct clock_s {
 
 /* === Private function declarations =========================================================== */
 
+static bool incrementar_y_verificar(uint8_t * digito, uint8_t limite);
+
 /* === Private variable definitions ============================================================ */
 
 /* === Public variable definition  ============================================================= */
 
 /* === Private function definitions ============================================================ */
-
+static bool incrementar_y_verificar(uint8_t * digito, uint8_t limite) {
+    (*digito)++;
+    if (*digito == limite) {
+        *digito = 0;
+        return true;
+    }
+    return false;
+}
 /* === Public function implementation ========================================================== */
 
 clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler) {
@@ -79,14 +88,15 @@ bool RelojSetupCurrentTime(clock_t self, const hora_t current_time) {
 
 void RelojNewTick(clock_t self) {
     self->ticks_count++;
-
-    if (self->ticks_count == self->ticks_per_second) {
-        self->current_time[5]++;
-        self->ticks_count = 0;
+    if (self->ticks_count < self->ticks_per_second) {
+        return;
     }
-    if (self->current_time[5] == 10) {
-        self->current_time[4]++;
-        self->current_time[5] = 0;
+    self->ticks_count = 0;
+
+    if (incrementar_y_verificar(&self->current_time[5], 10)) {
+        if (incrementar_y_verificar(&self->current_time[4], 6)) {
+            incrementar_y_verificar(&self->current_time[3], 10);
+        }
     }
 }
 
