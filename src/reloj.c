@@ -41,6 +41,8 @@ SPDX-License-Identifier: MIT
 struct clock_s {
     hora_t current_time;
     bool time_is_valid;
+    unsigned int ticks_per_second;
+    unsigned int ticks_count;
 };
 
 /* === Private function declarations =========================================================== */
@@ -59,6 +61,8 @@ clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler) {
     clock_t self = &instancia;
     memset(self->current_time, 0, sizeof(hora_t));
     self->time_is_valid = false;
+    self->ticks_count = 0;
+    self->ticks_per_second = ticks_per_second;
     return self;
 }
 
@@ -74,7 +78,16 @@ bool RelojSetupCurrentTime(clock_t self, const hora_t current_time) {
 }
 
 void RelojNewTick(clock_t self) {
-    self->current_time[5] = 3;
+    self->ticks_count++;
+
+    if (self->ticks_count == self->ticks_per_second) {
+        self->current_time[5]++;
+        self->ticks_count = 0;
+    }
+    if (self->current_time[5] == 10) {
+        self->current_time[4]++;
+        self->current_time[5] = 0;
+    }
 }
 
 /* === End of documentation ==================================================================== */
