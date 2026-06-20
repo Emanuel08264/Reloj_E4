@@ -175,7 +175,6 @@ void test_fijar_alarma_y_consultar(void) {
 /** @test Fijar la alarma y avanzar el reloj hasta que suene. */
 void test_fijar_alarma_y_avanzar_hasta_sonar(void) {
     clock_t reloj;
-    hora_t hora_alarma;
 
     alarma_sono = false;
 
@@ -186,4 +185,20 @@ void test_fijar_alarma_y_avanzar_hasta_sonar(void) {
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
 
     TEST_ASSERT_TRUE(alarma_sono);
+}
+
+/** @test Fijar la alarma, deshabilitarla, y avanzar el reloj para que no suene. */
+void test_fijar_alarma_deshabilitar_y_avanzar(void) {
+    clock_t reloj;
+
+    alarma_sono = false;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+    RelojToggleAlarm(reloj);
+    SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
+
+    TEST_ASSERT_FALSE(alarma_sono);
 }
