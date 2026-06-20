@@ -6,6 +6,7 @@ static const hora_t DEFAULT_TIME = {0, 0, 0, 0, 0, 0};
 static const hora_t DEFAULT_ALARM = {0, 0, 0, 0, 0, 0};
 static const hora_t INITIAL_TIME = {0, 2, 1, 2, 1, 2};
 static const hora_t ALARM_TIME = {0, 6, 3, 0, 0, 0};
+static bool alarma_sono = false;
 
 #define TICKS_PER_SECOND 3
 #define ONE_SECOND       TICKS_PER_SECOND
@@ -20,6 +21,10 @@ void SimulateClockTicks(clock_t reloj, unsigned int ticks) {
     for (unsigned int i = 0; i < ticks; i++) {
         RelojNewTick(reloj);
     }
+}
+
+void MockAlarmHandler(clock_t reloj) {
+    alarma_sono = true;
 }
 
 /**
@@ -165,4 +170,20 @@ void test_fijar_alarma_y_consultar(void) {
     RelojSetupAlarm(reloj, ALARM_TIME);
     TEST_ASSERT_TRUE(RelojGetAlarm(reloj, hora_alarma));
     TEST_ASSERT_EQUAL_UINT8_ARRAY(ALARM_TIME, hora_alarma, 6);
+}
+
+/** @test Fijar la alarma y avanzar el reloj hasta que suene. */
+void test_fijar_alarma_y_avanzar_hasta_sonar(void) {
+    clock_t reloj;
+    hora_t hora_alarma;
+
+    alarma_sono = false;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+    SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
+
+    TEST_ASSERT_TRUE(alarma_sono);
 }

@@ -47,6 +47,7 @@ struct clock_s {
     unsigned int ticks_count;
     bool alarm_enabled;
     unsigned int alarm;
+    alarm_handler_t alarm_handler;
 };
 
 /* === Private function declarations =========================================================== */
@@ -93,7 +94,7 @@ static void DecimalToBCD(unsigned int time_in_seconds, hora_t hora) {
 
 /* === Public function implementation ========================================================== */
 
-clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler) {
+clock_t RelojCreate(unsigned int ticks_per_second, alarm_handler_t alarm_handler) {
     static struct clock_s instancia;
 
     clock_t self = &instancia;
@@ -103,6 +104,7 @@ clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler) {
     self->ticks_per_second = ticks_per_second;
     self->alarm_enabled = false;
     self->alarm = 0;
+    self->alarm_handler = alarm_handler;
     return self;
 }
 
@@ -128,6 +130,9 @@ void RelojNewTick(clock_t self) {
 
     if (self->time == SECONDS_PER_DAY) {
         self->time = 0;
+    }
+    if (self->alarm == self->time && self->alarm_handler != NULL && self->alarm_enabled == true) {
+        self->alarm_handler(self);
     }
 }
 

@@ -51,11 +51,13 @@ typedef struct clock_s * clock_t;
 
 typedef uint8_t hora_t[6];
 
+typedef void (*alarm_handler_t)(clock_t reloj);
+
 /* === Public variable declarations ================================================================================ */
 
 /* === Public function declarations ================================================================================ */
 
-clock_t RelojCreate(unsigned int ticks_per_second, void * alarm_handler);
+clock_t RelojCreate(unsigned int ticks_per_second, alarm_handler_t alarm_handler);
 
 bool RelojGetCurrentTime(clock_t reloj, hora_t current_time);
 
