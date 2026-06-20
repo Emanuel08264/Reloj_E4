@@ -1,8 +1,11 @@
 #include "unity.h"
 #include "reloj.h"
+#include <string.h>
 
 static const hora_t DEFAULT_TIME = {0, 0, 0, 0, 0, 0};
+static const hora_t DEFAULT_ALARM = {0, 0, 0, 0, 0, 0};
 static const hora_t INITIAL_TIME = {0, 2, 1, 2, 1, 2};
+static const hora_t ALARM_TIME = {0, 6, 3, 0, 0, 0};
 
 #define TICKS_PER_SECOND 3
 #define ONE_SECOND       TICKS_PER_SECOND
@@ -31,7 +34,7 @@ void SimulateClockTicks(clock_t reloj, unsigned int ticks) {
  * - Decidir que sucede con el reloj desconfigurado y el avance de la hora.
  */
 
-// Al iniciar el reloj esta en 00:00 y con hora invalida
+/** @test iniciar el reloj esta en 00:00 y con hora invalida */
 void test_reloj_inicia_invalido(void) {
     clock_t reloj;
     hora_t hora_actual = {1, 2, 3, 4, 5, 6};
@@ -41,7 +44,7 @@ void test_reloj_inicia_invalido(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(DEFAULT_TIME, hora_actual, 6);
 }
 
-// Al ajustar la hora el reloj queda en hora y es valida
+/** @test Al ajustar la hora el reloj queda en hora y es valida */
 void test_reloj_ajuste_hora(void) {
     clock_t reloj;
     hora_t hora_actual = {1, 2, 3, 4, 5, 6};
@@ -52,7 +55,7 @@ void test_reloj_ajuste_hora(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(INITIAL_TIME, hora_actual, 6);
 }
 
-// Despues de n ciclos la hora avanza 1 segundo
+/** @test Despues de n ciclos la hora avanza 1 segundo */
 void test_reloj_avance_un_seg(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -65,7 +68,7 @@ void test_reloj_avance_un_seg(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
 
-// Despues de n ciclos la hora avanza 10 segundos
+/** @test Despues de n ciclos la hora avanza 10 segundos */
 void test_reloj_avance_diez_seg(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -78,7 +81,7 @@ void test_reloj_avance_diez_seg(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
 
-// Despues de n ciclos la hora avanza 1 minuto
+/** @test Despues de n ciclos la hora avanza 1 minuto */
 void test_reloj_avance_un_min(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -91,7 +94,7 @@ void test_reloj_avance_un_min(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
 
-// Despues de n ciclos la hora avanza 10 minutos
+/** @test Despues de n ciclos la hora avanza 10 minutos */
 void test_reloj_avance_diez_min(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -104,7 +107,7 @@ void test_reloj_avance_diez_min(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
 
-// Despues de n ciclos la hora avanza 1 hora
+/** @test Despues de n ciclos la hora avanza 1 hora */
 void test_reloj_avance_una_hora(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -116,7 +119,7 @@ void test_reloj_avance_una_hora(void) {
     RelojGetCurrentTime(reloj, hora_actual);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
-// Despues de n ciclos la hora avanza 10 horas
+/** @test Despues de n ciclos la hora avanza 10 horas */
 void test_reloj_avance_diez_horas(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -128,7 +131,7 @@ void test_reloj_avance_diez_horas(void) {
     RelojGetCurrentTime(reloj, hora_actual);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(EXPECTED_TIME, hora_actual, 6);
 }
-// Despues de n ciclos la hora avanza 1 día.
+/** @test Despues de n ciclos la hora avanza 1 día. */
 void test_reloj_avance_un_dia(void) {
     clock_t reloj;
     hora_t hora_actual;
@@ -138,4 +141,28 @@ void test_reloj_avance_un_dia(void) {
     SimulateClockTicks(reloj, ONE_DAY);
     RelojGetCurrentTime(reloj, hora_actual);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(INITIAL_TIME, hora_actual, 6);
+}
+
+void test_alarma_inicia_deshabilitada() {
+    clock_t reloj;
+    hora_t hora_alarma = {1, 2, 3, 4, 5, 6};
+
+    reloj = RelojCreate(TICKS_PER_SECOND, NULL);
+    TEST_ASSERT_FALSE(RelojGetAlarm(reloj, hora_alarma));
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(DEFAULT_ALARM, hora_alarma, 6);
+}
+
+/** @test Fijar la hora de la alarma y consultarla.*/
+void test_fijar_alarma_y_consultar(void) {
+    clock_t reloj;
+    hora_t hora_alarma;
+
+    memcpy(hora_alarma, DEFAULT_TIME, sizeof(hora_t));
+
+    reloj = RelojCreate(TICKS_PER_SECOND, NULL);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+    TEST_ASSERT_TRUE(RelojGetAlarm(reloj, hora_alarma));
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(ALARM_TIME, hora_alarma, 6);
 }

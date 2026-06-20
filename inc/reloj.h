@@ -63,6 +63,10 @@ bool RelojSetupCurrentTime(clock_t reloj, const hora_t current_time);
 
 void RelojNewTick(clock_t reloj);
 
+void RelojSetupAlarm(clock_t reloj, const hora_t alarm_time);
+
+bool RelojGetAlarm(clock_t reloj, hora_t alarm_time);
+
 /* === End of conditional blocks =================================================================================== */
 
 #ifdef __cplusplus
