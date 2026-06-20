@@ -1,8 +1,3 @@
-// 1 día.
-// Fijar la hora de la alarma y consultarla. Fijar la alarma y avanzar el reloj hasta que suene
-// la alarma, deshabilitarla, y avanzar el reloj para que no suene. Hacer sonar la alarma y posponerla 5 min
-// y cancelarla hasta el otro día.
-
 #include "unity.h"
 #include "reloj.h"
 
@@ -23,6 +18,18 @@ void SimulateClockTicks(clock_t reloj, unsigned int ticks) {
         RelojNewTick(reloj);
     }
 }
+
+/**
+ * @todo Test cases:
+ * - Fijar la hora de la alarma y consultarla.
+ * - Fijar la alarma y avanzar el reloj hasta que suene.
+ * - Fijar la alarma, deshabilitarla, y avanzar el reloj para que no suene.
+ * - Hacer sonar la alarma y posponerla.
+ * - Hacer sonar la alarma y cancelarla hasta el otro día.
+ * - Probar que el create no devuelve algo nulo.
+ * - Probar que no se pone en hora si el argumento es erroneo.
+ * - Decidir que sucede con el reloj desconfigurado y el avance de la hora.
+ */
 
 // Al iniciar el reloj esta en 00:00 y con hora invalida
 void test_reloj_inicia_invalido(void) {
