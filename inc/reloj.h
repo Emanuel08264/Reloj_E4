@@ -71,6 +71,8 @@ bool RelojGetAlarm(clock_t reloj, hora_t alarm_time);
 
 void RelojToggleAlarm(clock_t reloj);
 
+void RelojSnoozeAlarm(clock_t reloj, const unsigned int snooze_time);
+
 /* === End of conditional blocks =================================================================================== */
 
 #ifdef __cplusplus

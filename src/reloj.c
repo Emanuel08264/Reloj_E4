@@ -150,4 +150,8 @@ void RelojToggleAlarm(clock_t self) {
     self->alarm_enabled = !self->alarm_enabled;
 }
 
+void RelojSnoozeAlarm(clock_t self, const unsigned int snooze_time) {
+    self->alarm = self->alarm + 60 * snooze_time;
+}
+
 /* === End of documentation ==================================================================== */
