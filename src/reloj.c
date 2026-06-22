@@ -154,10 +154,18 @@ void RelojNewTick(clock_t self) {
     }
 }
 
-void RelojSetupAlarm(clock_t self, const hora_t alarm_time) {
+bool RelojSetupAlarm(clock_t self, const hora_t alarm_time) {
+    uint8_t horas = 10 * alarm_time[0] + alarm_time[1];
+    uint8_t minutos = 10 * alarm_time[2] + alarm_time[3];
+    uint8_t segundos = 10 * alarm_time[4] + alarm_time[5];
+
+    if (horas > 23 || minutos > 59 || segundos > 59) {
+        return false;
+    }
     self->alarm = BCDToDecimal(alarm_time);
     self->alarm_enabled = true;
     self->snooze = false;
+    return true;
 }
 
 bool RelojGetAlarm(clock_t self, hora_t alarm_time) {

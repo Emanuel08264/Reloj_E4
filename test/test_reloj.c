@@ -168,7 +168,7 @@ void test_fijar_alarma_y_consultar(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, NULL);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    TEST_ASSERT_TRUE(RelojSetupAlarm(reloj, ALARM_TIME));
     TEST_ASSERT_TRUE(RelojGetAlarm(reloj, hora_alarma));
     TEST_ASSERT_EQUAL_UINT8_ARRAY(ALARM_TIME, hora_alarma, 6);
 }
@@ -182,7 +182,7 @@ void test_fijar_alarma_y_avanzar_hasta_sonar(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
 
     TEST_ASSERT_TRUE(alarma_sono);
@@ -197,7 +197,7 @@ void test_fijar_alarma_deshabilitar_y_avanzar(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
     RelojToggleAlarm(reloj);
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
 
@@ -212,7 +212,7 @@ void test_posponer_alarma(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
 
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
     TEST_ASSERT_TRUE(alarma_sono);
@@ -230,7 +230,7 @@ void test_posponer_y_cancelar_alarma(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
 
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
     TEST_ASSERT_TRUE(alarma_sono);
@@ -253,7 +253,7 @@ void test_reconfigurar_alarma_cancela_snooze(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
 
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
     TEST_ASSERT_TRUE(alarma_sono);
@@ -261,7 +261,7 @@ void test_reconfigurar_alarma_cancela_snooze(void) {
     RelojSnoozeAlarm(reloj, 5);
     alarma_sono = false;
     SimulateClockTicks(reloj, 1 * ONE_MINUTE);
-    RelojSetupAlarm(reloj, NEW_ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, NEW_ALARM_TIME);
     SimulateClockTicks(reloj, 4 * ONE_MINUTE);
     TEST_ASSERT_FALSE(alarma_sono);
 }
@@ -274,7 +274,7 @@ void test_cancelar_alarma_cancela_snooze(void) {
     reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
     (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
 
-    RelojSetupAlarm(reloj, ALARM_TIME);
+    (void)RelojSetupAlarm(reloj, ALARM_TIME);
 
     SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
 
@@ -311,4 +311,15 @@ void test_ajuste_hora_invalido(void) {
 
     reloj = RelojCreate(1, NULL);
     TEST_ASSERT_FALSE(RelojSetupCurrentTime(reloj, INVALID_HOUR));
+}
+
+/** @test No configura alarma si el argumento es erroneo.*/
+void test_ajuste_alarma_invalido(void) {
+    clock_t reloj;
+    static const hora_t INVALID_HOUR = {2, 5, 6, 2, 1, 2};
+
+    reloj = RelojCreate(1, NULL);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    TEST_ASSERT_FALSE(RelojSetupAlarm(reloj, INVALID_HOUR));
 }
