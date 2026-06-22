@@ -118,6 +118,14 @@ bool RelojGetCurrentTime(clock_t self, hora_t current_time) {
 }
 
 bool RelojSetupCurrentTime(clock_t self, const hora_t current_time) {
+    uint8_t horas = 10 * current_time[0] + current_time[1];
+    uint8_t minutos = 10 * current_time[2] + current_time[3];
+    uint8_t segundos = 10 * current_time[4] + current_time[5];
+
+    if (horas > 23 || minutos > 59 || segundos > 59) {
+        return false;
+    }
+
     self->time = BCDToDecimal(current_time);
     self->time_is_valid = true;
     return true;

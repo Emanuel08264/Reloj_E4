@@ -294,3 +294,21 @@ void test_cancelar_alarma_cancela_snooze(void) {
     SimulateClockTicks(reloj, 5 * ONE_MINUTE);
     TEST_ASSERT_FALSE(alarma_sono);
 }
+
+/** @test Probar que el create no devuelve algo nulo.*/
+void test_create_no_devuelve_null(void) {
+    clock_t reloj;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, NULL);
+
+    TEST_ASSERT_NOT_NULL(reloj);
+}
+
+/** @test Probar que no se pone en hora si el argumento es erroneo.*/
+void test_ajuste_hora_invalido(void) {
+    clock_t reloj;
+    static const hora_t INVALID_HOUR = {2, 5, 6, 2, 1, 2};
+
+    reloj = RelojCreate(1, NULL);
+    TEST_ASSERT_FALSE(RelojSetupCurrentTime(reloj, INVALID_HOUR));
+}
