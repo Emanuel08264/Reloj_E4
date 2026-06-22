@@ -149,6 +149,7 @@ void RelojNewTick(clock_t self) {
 void RelojSetupAlarm(clock_t self, const hora_t alarm_time) {
     self->alarm = BCDToDecimal(alarm_time);
     self->alarm_enabled = true;
+    self->snooze = false;
 }
 
 bool RelojGetAlarm(clock_t self, hora_t alarm_time) {
@@ -158,6 +159,9 @@ bool RelojGetAlarm(clock_t self, hora_t alarm_time) {
 
 void RelojToggleAlarm(clock_t self) {
     self->alarm_enabled = !self->alarm_enabled;
+    if (!self->alarm_enabled && self->snooze) {
+        self->snooze = false;
+    }
 }
 
 void RelojSnoozeAlarm(clock_t self, const unsigned int snooze_time) {

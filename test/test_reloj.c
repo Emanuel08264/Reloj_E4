@@ -6,6 +6,7 @@ static const hora_t DEFAULT_TIME = {0, 0, 0, 0, 0, 0};
 static const hora_t DEFAULT_ALARM = {0, 0, 0, 0, 0, 0};
 static const hora_t INITIAL_TIME = {0, 2, 1, 2, 1, 2};
 static const hora_t ALARM_TIME = {0, 6, 3, 0, 0, 0};
+static const hora_t NEW_ALARM_TIME = {0, 7, 3, 0, 0, 0};
 static bool alarma_sono = false;
 
 #define TICKS_PER_SECOND 3
@@ -242,4 +243,54 @@ void test_posponer_y_cancelar_alarma(void) {
     alarma_sono = false;
     SimulateClockTicks(reloj, ONE_DAY - 5 * ONE_MINUTE);
     TEST_ASSERT_TRUE(alarma_sono);
+}
+
+/** @test Reconfigurar la alarma mientras hay snooze activo cancela el snooze.*/
+void test_reconfigurar_alarma_cancela_snooze(void) {
+    clock_t reloj;
+    alarma_sono = false;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+
+    SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
+    TEST_ASSERT_TRUE(alarma_sono);
+
+    RelojSnoozeAlarm(reloj, 5);
+    alarma_sono = false;
+    SimulateClockTicks(reloj, 1 * ONE_MINUTE);
+    RelojSetupAlarm(reloj, NEW_ALARM_TIME);
+    SimulateClockTicks(reloj, 4 * ONE_MINUTE);
+    TEST_ASSERT_FALSE(alarma_sono);
+}
+
+/** @test Cancelar la alarma mientras hay snooze activo cancela el snooze.*/
+void test_cancelar_alarma_cancela_snooze(void) {
+    clock_t reloj;
+    alarma_sono = false;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+
+    SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
+
+    RelojSnoozeAlarm(reloj, 5);
+    alarma_sono = false;
+    SimulateClockTicks(reloj, 1 * ONE_MINUTE);
+    RelojToggleAlarm(reloj);
+    SimulateClockTicks(reloj, 4 * ONE_MINUTE);
+    TEST_ASSERT_FALSE(alarma_sono);
+
+    SimulateClockTicks(reloj, 5 * ONE_MINUTE);
+    RelojToggleAlarm(reloj);
+
+    SimulateClockTicks(reloj, ONE_DAY - 10 * ONE_MINUTE);
+    TEST_ASSERT_TRUE(alarma_sono);
+    alarma_sono = false;
+    SimulateClockTicks(reloj, 5 * ONE_MINUTE);
+    TEST_ASSERT_FALSE(alarma_sono);
 }
