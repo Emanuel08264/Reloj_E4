@@ -48,6 +48,8 @@ struct clock_s {
     bool alarm_enabled;
     unsigned int alarm;
     alarm_handler_t alarm_handler;
+    bool snooze;
+    unsigned int snooze_alarm;
 };
 
 /* === Private function declarations =========================================================== */
@@ -105,6 +107,8 @@ clock_t RelojCreate(unsigned int ticks_per_second, alarm_handler_t alarm_handler
     self->alarm_enabled = false;
     self->alarm = 0;
     self->alarm_handler = alarm_handler;
+    self->snooze = false;
+    self->snooze_alarm = 0;
     return self;
 }
 
@@ -131,8 +135,14 @@ void RelojNewTick(clock_t self) {
     if (self->time == SECONDS_PER_DAY) {
         self->time = 0;
     }
-    if (self->alarm == self->time && self->alarm_handler != NULL && self->alarm_enabled == true) {
+    if (self->alarm == self->time && self->alarm_handler != NULL && self->alarm_enabled == true &&
+        self->snooze == false) {
         self->alarm_handler(self);
+    }
+    if (self->snooze_alarm == self->time && self->alarm_handler != NULL && self->alarm_enabled == true &&
+        self->snooze == true) {
+        self->alarm_handler(self);
+        self->snooze = false;
     }
 }
 
@@ -151,7 +161,8 @@ void RelojToggleAlarm(clock_t self) {
 }
 
 void RelojSnoozeAlarm(clock_t self, const unsigned int snooze_time) {
-    self->alarm = self->alarm + 60 * snooze_time;
+    self->snooze_alarm = (self->alarm + 60 * snooze_time) % SECONDS_PER_DAY;
+    self->snooze = true;
 }
 
 /* === End of documentation ==================================================================== */

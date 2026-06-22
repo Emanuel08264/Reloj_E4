@@ -220,3 +220,26 @@ void test_posponer_alarma(void) {
     SimulateClockTicks(reloj, 5 * ONE_MINUTE);
     TEST_ASSERT_TRUE(alarma_sono);
 }
+
+/** @test Hacer sonar la alarma, posponerla, y cancelarla hasta el otro día.*/
+void test_posponer_y_cancelar_alarma(void) {
+    clock_t reloj;
+    alarma_sono = false;
+
+    reloj = RelojCreate(TICKS_PER_SECOND, MockAlarmHandler);
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+
+    RelojSetupAlarm(reloj, ALARM_TIME);
+
+    SimulateClockTicks(reloj, (4 * ONE_HOUR + 17 * ONE_MINUTE + 48 * ONE_SECOND));
+    TEST_ASSERT_TRUE(alarma_sono);
+
+    RelojSnoozeAlarm(reloj, 5);
+    alarma_sono = false;
+    SimulateClockTicks(reloj, 5 * ONE_MINUTE);
+    TEST_ASSERT_TRUE(alarma_sono);
+
+    alarma_sono = false;
+    SimulateClockTicks(reloj, ONE_DAY - 5 * ONE_MINUTE);
+    TEST_ASSERT_TRUE(alarma_sono);
+}
