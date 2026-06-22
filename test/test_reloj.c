@@ -28,18 +28,6 @@ void MockAlarmHandler(clock_t reloj) {
     alarma_sono = true;
 }
 
-/**
- * @todo Test cases:
- * - Fijar la hora de la alarma y consultarla.
- * - Fijar la alarma y avanzar el reloj hasta que suene.
- * - Fijar la alarma, deshabilitarla, y avanzar el reloj para que no suene.
- * - Hacer sonar la alarma y posponerla.
- * - Hacer sonar la alarma y cancelarla hasta el otro día.
- * - Probar que el create no devuelve algo nulo.
- * - Probar que no se pone en hora si el argumento es erroneo.
- * - Decidir que sucede con el reloj desconfigurado y el avance de la hora.
- */
-
 /** @test iniciar el reloj esta en 00:00 y con hora invalida */
 void test_reloj_inicia_invalido(void) {
     clock_t reloj;
@@ -149,7 +137,8 @@ void test_reloj_avance_un_dia(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(INITIAL_TIME, hora_actual, 6);
 }
 
-void test_alarma_inicia_deshabilitada() {
+/** @test Verificar que la alarma inicia deshabilitada por defecto. */
+void test_alarma_inicia_deshabilitada(void) {
     clock_t reloj;
     hora_t hora_alarma = {1, 2, 3, 4, 5, 6};
 

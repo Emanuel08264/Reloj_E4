@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
 /** @file reloj.c
- ** @brief Implementacion de las funciones de reloj
+ ** @brief Implementación de las funciones de reloj
  **/
 
 /* === Headers files inclusions ================================================================ */
@@ -40,21 +40,38 @@ SPDX-License-Identifier: MIT
 
 /* === Private data type declarations ========================================================== */
 
+/**
+ * @brief Estructura interna que mantiene el estado y configuración del reloj.
+ */
 struct clock_s {
-    unsigned int time;
-    bool time_is_valid;
-    unsigned int ticks_per_second;
-    unsigned int ticks_count;
-    bool alarm_enabled;
-    unsigned int alarm;
-    alarm_handler_t alarm_handler;
-    bool snooze;
-    unsigned int snooze_alarm;
+    unsigned int time;             /**< Hora actual del reloj en segundos absolutos (0 a 86399) */
+    bool time_is_valid;            /**< Bandera que indica si el reloj fue puesto en hora */
+    unsigned int ticks_per_second; /**< Frecuencia de ticks necesaria para avanzar 1 segundo */
+    unsigned int ticks_count;      /**< Contador interno de ticks acumulados */
+    bool alarm_enabled;            /**< Estado de la alarma (true = encendida, false = apagada) */
+    unsigned int alarm;            /**< Hora original de la alarma en segundos absolutos */
+    alarm_handler_t alarm_handler; /**< Callback a ejecutar cuando se dispara la alarma */
+    bool snooze;                   /**< Bandera que indica si hay un pospuesto activo */
+    unsigned int snooze_alarm;     /**< Hora pospuesta de la alarma en segundos absolutos */
 };
 
 /* === Private function declarations =========================================================== */
 
+/**
+ * @brief Convierte un arreglo de tiempo BCD a una cantidad de segundos absolutos.
+ *
+ * @param hora Arreglo de 6 bytes con la hora en formato [H_decenas, H_unidades, M_decenas, M_unidades, S_decenas,
+ * S_unidades].
+ * @return unsigned int Tiempo total equivalente en segundos desde las 00:00:00 (valor entre 0 y 86399).
+ */
 static unsigned int BCDToDecimal(const hora_t hora);
+
+/**
+ * @brief Convierte una cantidad de segundos absolutos a un arreglo de tiempo BCD.
+ * * @param time_in_seconds Tiempo total en segundos (debe ser menor a 86400).
+ * @param hora Arreglo de 6 bytes donde se escribirá el resultado en formato [H_decenas, H_unidades, M_decenas,
+ * M_unidades, S_decenas, S_unidades].
+ */
 static void DecimalToBCD(unsigned int time_in_seconds, hora_t hora);
 
 /* === Private variable definitions ============================================================ */
