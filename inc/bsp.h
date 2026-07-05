@@ -59,7 +59,7 @@ typedef struct board_s {
     digital_input_t cancel;  /**< Entrada digital para la tecla cancel */
     display_t display;       /**< Descriptor para el manejo de la pantalla de 7 segmentos */
 
-} const * const board_t;
+} const * board_t;
 
 /* === Public variable declarations ================================================================================ */
 
@@ -78,6 +78,13 @@ board_t BoardCreate(void);
  * @param self Puntero a la estructura que representa la placa de desarrollo
  */
 void UpdateAllInputs(board_t self);
+
+/**
+ * @brief Inicializa el temporizador del sistema para generar interrupciones periódicas.
+ *
+ * @param ticks Cantidad de interrupciones por segundo.
+ */
+void Systick_Init(uint32_t ticks);
 
 /* === End of conditional blocks =================================================================================== */
 

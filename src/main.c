@@ -5,150 +5,201 @@ Universidad Nacional de Tucuman
 
 Copyright 2026, Emanuel Santillan <emanuelsantillan209gmail.com>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute,
-sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial
-portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
-OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 SPDX-License-Identifier: MIT
 *************************************************************************************************/
 
-/* === Headers files inclusions =============================================================== */
+/** @file main.c
+ ** @brief Programa principal del proyecto
+ **/
+
+/* === Headers files inclusions ================================================================ */
 
 #include "bsp.h"
-#include "screen.h"
+#include "reloj.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 /* === Macros definitions ====================================================================== */
 
+#define TICKS_PER_SECOND 1000
+
 /* === Private data type declarations ========================================================== */
 
-/* === Private variable declarations =========================================================== */
+typedef enum {
+    HORA_SIN_AJUSTAR,
+    MOSTRANDO_HORA,
+    AJUSTE_HORA_ACTUAL,
+    AJUSTE_MINUTOS_ACTUAL,
+    AJUSTE_HORA_ALARMA,
+    AJUSTE_MINUTOS_ALARMA
+} estado_t;
 
 /* === Private function declarations =========================================================== */
 
-static void Delay(void);
-
-/* === Public variable definitions ============================================================= */
+void SonarAlarma(clock_t reloj);
+estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t reloj);
 
 /* === Private variable definitions ============================================================ */
 
-/* === Private function implementation ========================================================= */
+static board_t placa;
+static clock_t reloj;
+static estado_t estado;
 
-static void Delay(void) {
-    for (volatile int i = 0; i < 5000; i++) {
-        __asm__("nop");
+static volatile uint32_t time_on_f1 = 0;
+static volatile uint32_t time_on_f2 = 0;
+static volatile uint32_t idle_time = 0;
+
+static hora_t DEFAULT_TIME = {0, 0, 0, 0, 0, 0};
+
+/* === Public variable definition  ============================================================= */
+
+/* === Private function definitions ============================================================ */
+
+void SonarAlarma(clock_t reloj) {
+}
+
+estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t reloj) {
+    estado_t estado_siguiente = estado_actual;
+    switch (estado_actual) {
+    case HORA_SIN_AJUSTAR:
+        if ((time_on_f1 / TICKS_PER_SECOND) >= 3) {
+            estado_siguiente = AJUSTE_MINUTOS_ACTUAL;
+        }
+        break;
+    case MOSTRANDO_HORA:
+        if ((time_on_f1 / TICKS_PER_SECOND) >= 3) {
+            estado_siguiente = AJUSTE_MINUTOS_ACTUAL;
+        }
+        if ((time_on_f2 / TICKS_PER_SECOND) >= 3) {
+            estado_siguiente = AJUSTE_MINUTOS_ALARMA;
+        }
+        if (DigitalInputHasActivated(placa->accept) || DigitalInputHasActivated(placa->cancel)) {
+            estado_siguiente = MOSTRANDO_HORA;
+        }
+        break;
+    case AJUSTE_MINUTOS_ACTUAL:
+        if (DigitalInputHasActivated(placa->accept)) {
+            estado_siguiente = AJUSTE_HORA_ACTUAL;
+        }
+        if (DigitalInputHasActivated(placa->cancel) || idle_time / TICKS_PER_SECOND >= 30) {
+            if (RelojGetCurrentTime(reloj, NULL)) {
+                estado_siguiente = MOSTRANDO_HORA;
+            } else {
+                estado_siguiente = HORA_SIN_AJUSTAR;
+            }
+        }
+        break;
+    case AJUSTE_HORA_ACTUAL:
+        if (DigitalInputHasActivated(placa->accept)) {
+            estado_siguiente = MOSTRANDO_HORA;
+        }
+        if (DigitalInputHasActivated(placa->cancel) || idle_time / TICKS_PER_SECOND >= 30) {
+            if (RelojGetCurrentTime(reloj, NULL)) {
+                estado_siguiente = MOSTRANDO_HORA;
+            } else {
+                estado_siguiente = HORA_SIN_AJUSTAR;
+            }
+        }
+        break;
+    case AJUSTE_MINUTOS_ALARMA:
+        if (DigitalInputHasActivated(placa->accept)) {
+            estado_siguiente = AJUSTE_HORA_ALARMA;
+        }
+        if (DigitalInputHasActivated(placa->cancel) || idle_time / TICKS_PER_SECOND >= 30) {
+            estado_siguiente = MOSTRANDO_HORA;
+        }
+        break;
+    case AJUSTE_HORA_ALARMA:
+        if (DigitalInputHasActivated(placa->accept) || DigitalInputHasActivated(placa->cancel) ||
+            idle_time / TICKS_PER_SECOND >= 30) {
+            estado_siguiente = MOSTRANDO_HORA;
+        }
+        break;
+    default:
+        estado_siguiente = HORA_SIN_AJUSTAR;
+        break;
     }
+    return estado_siguiente;
 }
 
 /* === Public function implementation ========================================================== */
 
 int main(void) {
-    board_t placa = BoardCreate();
+    placa = BoardCreate();
+    reloj = RelojCreate(TICKS_PER_SECOND, SonarAlarma);
+    estado = HORA_SIN_AJUSTAR;
+    estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
+                                               // que se ejecute la lógica de actualización de pantalla al inicio
 
-    uint8_t init_number[] = {6, 7, 6, 7};
-    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
-
-    int8_t editing_digit = -1;
-    uint32_t delay_anti_rebote = 0;
+    Systick_Init(TICKS_PER_SECOND);
 
     while (true) {
-
-        delay_anti_rebote++;
-        if (delay_anti_rebote >= 50) {
-            delay_anti_rebote = 0;
-
-            bool mode_has_changed = false;
-
-            if (DigitalInputHasActivated(placa->f4)) {
-                if (editing_digit == 0) {
-                    editing_digit = -1;
-                } else {
-                    editing_digit = 0;
-                }
-                mode_has_changed = true;
+        estado = LogicaEstadoSiguiente(estado, placa, reloj);
+        if (estado != estado_anterior) {
+            idle_time = 0;
+            switch (estado) {
+            case HORA_SIN_AJUSTAR:
+                DisplayWriteBCD(placa->display, DEFAULT_TIME, 4);
+                DisplayFlashDigits(placa->display, 0, 3, TICKS_PER_SECOND / 2);
+                break;
+            case MOSTRANDO_HORA:
+                break;
+            case AJUSTE_HORA_ACTUAL:
+                break;
+            case AJUSTE_MINUTOS_ACTUAL:
+                break;
+            case AJUSTE_HORA_ALARMA:
+                break;
+            case AJUSTE_MINUTOS_ALARMA:
+                break;
+            default:
+                break;
             }
-            if (DigitalInputHasActivated(placa->f3)) {
-                if (editing_digit == 1) {
-                    editing_digit = -1;
-                } else {
-                    editing_digit = 1;
-                }
-                mode_has_changed = true;
-            }
-            if (DigitalInputHasActivated(placa->f2)) {
-                if (editing_digit == 2) {
-                    editing_digit = -1;
-                } else {
-                    editing_digit = 2;
-                }
-                mode_has_changed = true;
-            }
-            if (DigitalInputHasActivated(placa->f1)) {
-                if (editing_digit == 3) {
-                    editing_digit = -1;
-                } else {
-                    editing_digit = 3;
-                }
-                mode_has_changed = true;
-            }
-
-            if (mode_has_changed) {
-                if (editing_digit != -1) {
-                    DisplayFlashDigits(placa->display, editing_digit, editing_digit, 50);
-                } else {
-                    DisplayFlashDigits(placa->display, 0, 0, 0);
-                }
-            }
-
-            if (editing_digit != -1) {
-                bool digit_has_changed = false;
-
-                if (DigitalInputHasActivated(placa->accept)) {
-                    if (init_number[editing_digit] < 9) {
-                        init_number[editing_digit]++;
-                    } else {
-                        init_number[editing_digit] = 0;
-                    }
-                    digit_has_changed = true;
-                }
-
-                if (DigitalInputHasActivated(placa->cancel)) {
-                    if (init_number[editing_digit] > 0) {
-                        init_number[editing_digit]--;
-                    } else {
-                        init_number[editing_digit] = 9;
-                    }
-                    digit_has_changed = true;
-                }
-
-                if (init_number[editing_digit] == 0) {
-                    DisplayToggleDots(placa->display, editing_digit, editing_digit);
-                }
-
-                if (digit_has_changed) {
-                    DisplayWriteBCD(placa->display, init_number, sizeof(init_number));
-                }
-            }
-
-            UpdateAllInputs(placa);
         }
+        estado_anterior = estado;
+    }
+}
 
-        Delay();
-        DisplayRefresh(placa->display);
+void SysTick_Handler(void) {
+    DisplayRefresh(placa->display);
+    UpdateAllInputs(placa);
+    RelojNewTick(reloj);
+
+    if (!DigitalInputGetState(placa->accept) && !DigitalInputGetState(placa->cancel) &&
+        !DigitalInputGetState(placa->f1) && !DigitalInputGetState(placa->f2) && !DigitalInputGetState(placa->f3) &&
+        !DigitalInputGetState(placa->f4)) {
+        idle_time++;
+    } else {
+        idle_time = 0;
     }
 
-    return 0;
+    if (DigitalInputGetState(placa->f1)) {
+        time_on_f1++;
+    } else {
+        time_on_f1 = 0;
+    }
+    if (DigitalInputGetState(placa->f2)) {
+        time_on_f2++;
+    } else {
+        time_on_f2 = 0;
+    }
 }
 /* === End of documentation ==================================================================== */
-
-/** @} End of module definition for doxygen */

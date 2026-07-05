@@ -130,7 +130,9 @@ clock_t RelojCreate(unsigned int ticks_per_second, alarm_handler_t alarm_handler
 }
 
 bool RelojGetCurrentTime(clock_t self, hora_t current_time) {
-    DecimalToBCD(self->time, current_time);
+    if (current_time != NULL) {
+        DecimalToBCD(self->time, current_time);
+    }
     return self->time_is_valid;
 }
 

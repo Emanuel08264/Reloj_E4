@@ -312,3 +312,11 @@ void test_ajuste_alarma_invalido(void) {
 
     TEST_ASSERT_FALSE(RelojSetupAlarm(reloj, INVALID_HOUR));
 }
+
+/** @test Si mando NULL a GetCurrentTime solo devuelve time_is_valid*/
+void test_enviar_NULL_a_Get(void) {
+    clock_t reloj = RelojCreate(1, NULL);
+    TEST_ASSERT_FALSE(RelojGetCurrentTime(reloj, NULL));
+    (void)RelojSetupCurrentTime(reloj, INITIAL_TIME);
+    TEST_ASSERT_TRUE(RelojGetCurrentTime(reloj, NULL));
+}

@@ -82,6 +82,8 @@ clock_t RelojCreate(unsigned int ticks_per_second, alarm_handler_t alarm_handler
  *
  * @param reloj Instancia del reloj.
  * @param current_time Arreglo donde se guardará la hora leída.
+ *                     Si se pasa NULL, la función solo devuelve el estado de validez
+ *                     sin escribir ningún valor.
  * @return true Si la hora devuelta es válida (el reloj fue configurado previamente).
  * @return false Si el reloj nunca fue puesto en hora.
  * @note Si el reloj no fue configurado, current_time se rellena con 00:00:00.

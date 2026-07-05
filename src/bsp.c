@@ -201,4 +201,8 @@ void UpdateAllInputs(board_t self) {
     DigitalInputUpdate(self->cancel);
 }
 
+void Systick_Init(uint32_t ticks) {
+    SysTick_Config(SystemCoreClock / ticks);
+}
+
 /* === End of documentation ==================================================================== */
