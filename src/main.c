@@ -68,6 +68,12 @@ static volatile uint32_t time_on_f2 = 0;
 static volatile uint32_t idle_time = 0;
 
 static hora_t DEFAULT_TIME = {0, 0, 0, 0, 0, 0};
+static hora_t hora_ajuste = {0, 0, 0, 0, 0, 0};
+static hora_t hora_actual;
+
+static bool confirmar_ajuste = false;
+
+static volatile uint32_t timer_rebote = 0;
 
 /* === Public variable definition  ============================================================= */
 
@@ -110,6 +116,7 @@ estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t re
     case AJUSTE_HORA_ACTUAL:
         if (DigitalInputHasActivated(placa->accept)) {
             estado_siguiente = MOSTRANDO_HORA;
+            confirmar_ajuste = true;
         }
         if (DigitalInputHasActivated(placa->cancel) || idle_time / TICKS_PER_SECOND >= 30) {
             if (RelojGetCurrentTime(reloj, NULL)) {
@@ -140,6 +147,55 @@ estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t re
     return estado_siguiente;
 }
 
+static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
+    uint8_t minutos_totales;
+    uint8_t horas_totales;
+
+    minutos_totales = ajuste[2] * 10 + ajuste[3];
+    horas_totales = ajuste[0] * 10 + ajuste[1];
+    if (timer_rebote == 0) {
+        if (minutos) {
+            if (DigitalInputHasActivated(placa->f3)) {
+                if (minutos_totales != 0) {
+                    minutos_totales--;
+                } else {
+                    minutos_totales = 59;
+                }
+                timer_rebote = 100;
+            }
+            if (DigitalInputHasActivated(placa->f4)) {
+                if (minutos_totales != 59) {
+                    minutos_totales++;
+                } else {
+                    minutos_totales = 0;
+                }
+                timer_rebote = 100;
+            }
+        } else {
+            if (DigitalInputHasActivated(placa->f3)) {
+                if (horas_totales != 0) {
+                    horas_totales--;
+                } else {
+                    horas_totales = 23;
+                }
+                timer_rebote = 100;
+            }
+            if (DigitalInputHasActivated(placa->f4)) {
+                if (horas_totales != 23) {
+                    horas_totales++;
+                } else {
+                    horas_totales = 0;
+                }
+                timer_rebote = 100;
+            }
+        }
+    }
+    ajuste[0] = horas_totales / 10;
+    ajuste[1] = horas_totales % 10;
+    ajuste[2] = minutos_totales / 10;
+    ajuste[3] = minutos_totales % 10;
+}
+
 /* === Public function implementation ========================================================== */
 
 int main(void) {
@@ -157,15 +213,22 @@ int main(void) {
             idle_time = 0;
             switch (estado) {
             case HORA_SIN_AJUSTAR:
+                DisplayWriteBCD(placa->display, DEFAULT_TIME, 4);
                 DisplayFlashDigits(placa->display, 0, 3, TICKS_PER_SECOND / 2);
                 break;
             case MOSTRANDO_HORA:
+                DisplayFlashDigits(placa->display, 0, 0, 0);
+                if (estado_anterior == AJUSTE_HORA_ACTUAL && confirmar_ajuste) {
+                    RelojSetupCurrentTime(reloj, hora_ajuste);
+                    confirmar_ajuste = false;
+                }
                 break;
             case AJUSTE_MINUTOS_ACTUAL:
-                DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 2);
+                DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
+                RelojGetCurrentTime(reloj, hora_ajuste);
                 break;
             case AJUSTE_HORA_ACTUAL:
-                DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 2);
+                DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 4);
                 break;
             case AJUSTE_MINUTOS_ALARMA:
                 break;
@@ -176,22 +239,28 @@ int main(void) {
             }
         }
         estado_anterior = estado;
-        // switch (estado) {
-        // case HORA_SIN_AJUSTAR:
-        //     break;
-        // case MOSTRANDO_HORA:
-        //     break;
-        // case AJUSTE_MINUTOS_ACTUAL:
-        //     break;
-        // case AJUSTE_HORA_ACTUAL:
-        //     break;
-        // case AJUSTE_MINUTOS_ALARMA:
-        //     break;
-        // case AJUSTE_HORA_ALARMA:
-        //     break;
-        // default:
-        //     break;
-        // }
+        switch (estado) {
+        case HORA_SIN_AJUSTAR:
+            break;
+        case MOSTRANDO_HORA:
+            RelojGetCurrentTime(reloj, hora_actual);
+            DisplayWriteBCD(placa->display, hora_actual, 4);
+            break;
+        case AJUSTE_MINUTOS_ACTUAL:
+            incrementar_y_decrementar(hora_ajuste, true);
+            DisplayWriteBCD(placa->display, hora_ajuste, 4);
+            break;
+        case AJUSTE_HORA_ACTUAL:
+            incrementar_y_decrementar(hora_ajuste, false);
+            DisplayWriteBCD(placa->display, hora_ajuste, 4);
+            break;
+        case AJUSTE_MINUTOS_ALARMA:
+            break;
+        case AJUSTE_HORA_ALARMA:
+            break;
+        default:
+            break;
+        }
         UpdateAllInputs(placa);
     }
 }
@@ -217,6 +286,10 @@ void SysTick_Handler(void) {
         time_on_f2++;
     } else {
         time_on_f2 = 0;
+    }
+
+    if (timer_rebote > 0) {
+        timer_rebote--;
     }
 }
 /* === End of documentation ==================================================================== */
