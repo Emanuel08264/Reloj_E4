@@ -148,7 +148,7 @@ int main(void) {
     estado = HORA_SIN_AJUSTAR;
     estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
                                                // que se ejecute la lógica de actualización de pantalla al inicio
-
+    DisplayWriteBCD(placa->display, DEFAULT_TIME, 4);
     Systick_Init(TICKS_PER_SECOND);
 
     while (true) {
@@ -157,30 +157,47 @@ int main(void) {
             idle_time = 0;
             switch (estado) {
             case HORA_SIN_AJUSTAR:
-                DisplayWriteBCD(placa->display, DEFAULT_TIME, 4);
                 DisplayFlashDigits(placa->display, 0, 3, TICKS_PER_SECOND / 2);
                 break;
             case MOSTRANDO_HORA:
                 break;
-            case AJUSTE_HORA_ACTUAL:
-                break;
             case AJUSTE_MINUTOS_ACTUAL:
+                DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 2);
                 break;
-            case AJUSTE_HORA_ALARMA:
+            case AJUSTE_HORA_ACTUAL:
+                DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 2);
                 break;
             case AJUSTE_MINUTOS_ALARMA:
+                break;
+            case AJUSTE_HORA_ALARMA:
                 break;
             default:
                 break;
             }
         }
         estado_anterior = estado;
+        // switch (estado) {
+        // case HORA_SIN_AJUSTAR:
+        //     break;
+        // case MOSTRANDO_HORA:
+        //     break;
+        // case AJUSTE_MINUTOS_ACTUAL:
+        //     break;
+        // case AJUSTE_HORA_ACTUAL:
+        //     break;
+        // case AJUSTE_MINUTOS_ALARMA:
+        //     break;
+        // case AJUSTE_HORA_ALARMA:
+        //     break;
+        // default:
+        //     break;
+        // }
+        UpdateAllInputs(placa);
     }
 }
 
 void SysTick_Handler(void) {
     DisplayRefresh(placa->display);
-    UpdateAllInputs(placa);
     RelojNewTick(reloj);
 
     if (!DigitalInputGetState(placa->accept) && !DigitalInputGetState(placa->cancel) &&
