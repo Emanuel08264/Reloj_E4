@@ -73,6 +73,7 @@ static hora_t hora_ajuste = {0, 0, 0, 0, 0, 0};
 static hora_t hora_actual;
 
 static bool confirmar_ajuste = false;
+static bool confirmar_alarma = false;
 
 static volatile uint32_t timer_rebote = 0;
 
@@ -136,10 +137,14 @@ estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t re
         }
         break;
     case AJUSTE_HORA_ALARMA:
-        if (DigitalInputHasActivated(placa->accept) || DigitalInputHasActivated(placa->cancel) ||
-            idle_time / TICKS_PER_SECOND >= 30) {
+        if (DigitalInputHasActivated(placa->cancel) || idle_time / TICKS_PER_SECOND >= 30) {
             estado_siguiente = MOSTRANDO_HORA;
         }
+        if (DigitalInputHasActivated(placa->accept)) {
+            estado_siguiente = MOSTRANDO_HORA;
+            confirmar_alarma = true;
+        }
+
         break;
     default:
         estado_siguiente = HORA_SIN_AJUSTAR;
@@ -223,6 +228,10 @@ int main(void) {
                     RelojSetupCurrentTime(reloj, hora_ajuste);
                     confirmar_ajuste = false;
                 }
+                if (estado_anterior == AJUSTE_HORA_ALARMA && confirmar_alarma) {
+                    RelojSetupAlarm(reloj, hora_ajuste);
+                    confirmar_alarma = false;
+                }
                 break;
             case AJUSTE_MINUTOS_ACTUAL:
                 DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
@@ -234,8 +243,13 @@ int main(void) {
                 DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 4);
                 break;
             case AJUSTE_MINUTOS_ALARMA:
+                DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
+                if (RelojGetAlarm(reloj, hora_ajuste) == false) {
+                    memcpy(hora_ajuste, DEFAULT_TIME, sizeof(hora_t));
+                }
                 break;
             case AJUSTE_HORA_ALARMA:
+                DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 4);
                 break;
             default:
                 break;
@@ -258,8 +272,12 @@ int main(void) {
             DisplayWriteBCD(placa->display, hora_ajuste, 4);
             break;
         case AJUSTE_MINUTOS_ALARMA:
+            incrementar_y_decrementar(hora_ajuste, true);
+            DisplayWriteBCD(placa->display, hora_ajuste, 4);
             break;
         case AJUSTE_HORA_ALARMA:
+            incrementar_y_decrementar(hora_ajuste, false);
+            DisplayWriteBCD(placa->display, hora_ajuste, 4);
             break;
         default:
             break;
