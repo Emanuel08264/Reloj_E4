@@ -36,6 +36,7 @@ SPDX-License-Identifier: MIT
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* === Macros definitions ====================================================================== */
 
@@ -200,7 +201,7 @@ static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
 
 int main(void) {
     placa = BoardCreate();
-    reloj = RelojCreate(TICKS_PER_SECOND, SonarAlarma);
+    reloj = RelojCreate(16, SonarAlarma);
     estado = HORA_SIN_AJUSTAR;
     estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
                                                // que se ejecute la lógica de actualización de pantalla al inicio
@@ -225,7 +226,9 @@ int main(void) {
                 break;
             case AJUSTE_MINUTOS_ACTUAL:
                 DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
-                RelojGetCurrentTime(reloj, hora_ajuste);
+                if (RelojGetCurrentTime(reloj, hora_ajuste) == false) {
+                    memcpy(hora_ajuste, DEFAULT_TIME, sizeof(hora_t));
+                }
                 break;
             case AJUSTE_HORA_ACTUAL:
                 DisplayFlashDigits(placa->display, 0, 1, TICKS_PER_SECOND / 4);
