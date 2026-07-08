@@ -138,9 +138,7 @@ void RelojToggleAlarm(clock_t reloj);
 
 /**
  * @brief Pospone temporalmente la alarma.
- * * Si ya existe un pospuesto (snooze) activo, esta función lo sobrescribe con el nuevo
- * valor calculado a partir de la hora de la alarma original. Generalmente se llama
- * mientras la alarma está sonando.
+ * * Asigna a snooze_alarm la hora actual más el tiempo de posposición especificado.
  * * @param reloj Instancia del reloj.
  * @param snooze_time Cantidad de minutos a posponer.
  */

@@ -86,11 +86,25 @@ static bool actualizar_teclas = false;
 
 /* === Private function definitions ============================================================ */
 
+/**
+ * @brief Callback de interrupción para el evento de alarma.
+ * * Activa la bandera de alarma y habilita la salida física del buzzer.
+ * * @param reloj Puntero a la instancia del reloj que disparó el evento.
+ */
 void SonarAlarma(clock_t reloj) {
     alarma_sonando = true;
     DigitalOutputActivate(placa->buzzer);
 }
 
+/**
+ * @brief Evalúa las entradas y determina el próximo estado del sistema.
+ * * Implementa las transiciones de la máquina de estados del reloj.
+ * Si la alarma está sonando, bloquea las transiciones hacia los menús de ajuste.
+ * * @param estado_actual El estado actual en el que se encuentra el reloj.
+ * @param placa Puntero a la estructura que contiene el hardware (botones).
+ * @param reloj Puntero al objeto reloj con la lógica de tiempo.
+ * @return estado_t El nuevo estado al que debe pasar el sistema.
+ */
 estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t reloj) {
     estado_t estado_siguiente = estado_actual;
     switch (estado_actual) {
@@ -163,6 +177,13 @@ estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t re
     return estado_siguiente;
 }
 
+/**
+ * @brief Gestiona el ajuste manual de horas o minutos.
+ * * Realiza el incremento o decremento cíclico de los campos de hora/minuto
+ * según las teclas F3/F4.
+ * * @param ajuste Puntero al buffer que contiene la hora a modificar.
+ * @param minutos true para ajustar minutos (índices 2 y 3), false para horas (índices 0 y 1).
+ */
 static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
     uint8_t minutos_totales;
     uint8_t horas_totales;
@@ -211,7 +232,7 @@ static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
 
 int main(void) {
     placa = BoardCreate();
-    reloj = RelojCreate(100, SonarAlarma);
+    reloj = RelojCreate(TICKS_PER_SECOND, SonarAlarma);
     estado = HORA_SIN_AJUSTAR;
     estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
                                                // que se ejecute la lógica de actualización de pantalla al inicio
@@ -277,63 +298,63 @@ int main(void) {
                 default:
                     break;
                 }
+                estado_anterior = estado;
+            } else {
+                switch (estado) {
+                case HORA_SIN_AJUSTAR:
+                    if (punto_segundo) {
+                        DisplayToggleDots(placa->display, 1, 1);
+                        punto_segundo = false;
+                    }
+                    break;
+                case MOSTRANDO_HORA:
+                    RelojGetCurrentTime(reloj, hora_actual);
+                    DisplayWriteBCD(placa->display, hora_actual, 4);
+                    if (punto_segundo) {
+                        DisplayToggleDots(placa->display, 1, 1);
+                        punto_segundo = false;
+                    }
+                    if (alarma_sonando) {
+                        if (DigitalInputHasActivated(placa->cancel)) {
+                            alarma_sonando = false;
+                            DigitalOutputDeactivate(placa->buzzer);
+                        }
+                        if (DigitalInputHasActivated(placa->accept)) {
+                            alarma_sonando = false;
+                            RelojSnoozeAlarm(reloj, 5);
+                            DigitalOutputDeactivate(placa->buzzer);
+                        }
+                    } else {
+                        if (DigitalInputHasActivated(placa->cancel) && RelojGetAlarm(reloj, NULL)) {
+                            RelojToggleAlarm(reloj);
+                            DisplayClearDots(placa->display, 3, 3);
+                        }
+                        if (DigitalInputHasActivated(placa->accept) && !RelojGetAlarm(reloj, NULL)) {
+                            RelojToggleAlarm(reloj);
+                            DisplaySetDots(placa->display, 3, 3);
+                        }
+                    }
+                    break;
+                case AJUSTE_MINUTOS_ACTUAL:
+                    incrementar_y_decrementar(hora_ajuste, true);
+                    DisplayWriteBCD(placa->display, hora_ajuste, 4);
+                    break;
+                case AJUSTE_HORA_ACTUAL:
+                    incrementar_y_decrementar(hora_ajuste, false);
+                    DisplayWriteBCD(placa->display, hora_ajuste, 4);
+                    break;
+                case AJUSTE_MINUTOS_ALARMA:
+                    incrementar_y_decrementar(hora_ajuste, true);
+                    DisplayWriteBCD(placa->display, hora_ajuste, 4);
+                    break;
+                case AJUSTE_HORA_ALARMA:
+                    incrementar_y_decrementar(hora_ajuste, false);
+                    DisplayWriteBCD(placa->display, hora_ajuste, 4);
+                    break;
+                default:
+                    break;
+                }
             }
-            estado_anterior = estado;
-            switch (estado) {
-            case HORA_SIN_AJUSTAR:
-                if (punto_segundo) {
-                    DisplayToggleDots(placa->display, 1, 1);
-                    punto_segundo = false;
-                }
-                break;
-            case MOSTRANDO_HORA:
-                RelojGetCurrentTime(reloj, hora_actual);
-                DisplayWriteBCD(placa->display, hora_actual, 4);
-                if (punto_segundo) {
-                    DisplayToggleDots(placa->display, 1, 1);
-                    punto_segundo = false;
-                }
-                if (alarma_sonando) {
-                    if (DigitalInputHasActivated(placa->cancel)) {
-                        alarma_sonando = false;
-                        DigitalOutputDeactivate(placa->buzzer);
-                    }
-                    if (DigitalInputHasActivated(placa->accept)) {
-                        alarma_sonando = false;
-                        RelojSnoozeAlarm(reloj, 5);
-                        DigitalOutputDeactivate(placa->buzzer);
-                    }
-                } else {
-                    if (DigitalInputHasActivated(placa->cancel) && RelojGetAlarm(reloj, NULL)) {
-                        RelojToggleAlarm(reloj);
-                        DisplayClearDots(placa->display, 3, 3);
-                    }
-                    if (DigitalInputHasActivated(placa->accept) && !RelojGetAlarm(reloj, NULL)) {
-                        RelojToggleAlarm(reloj);
-                        DisplaySetDots(placa->display, 3, 3);
-                    }
-                }
-                break;
-            case AJUSTE_MINUTOS_ACTUAL:
-                incrementar_y_decrementar(hora_ajuste, true);
-                DisplayWriteBCD(placa->display, hora_ajuste, 4);
-                break;
-            case AJUSTE_HORA_ACTUAL:
-                incrementar_y_decrementar(hora_ajuste, false);
-                DisplayWriteBCD(placa->display, hora_ajuste, 4);
-                break;
-            case AJUSTE_MINUTOS_ALARMA:
-                incrementar_y_decrementar(hora_ajuste, true);
-                DisplayWriteBCD(placa->display, hora_ajuste, 4);
-                break;
-            case AJUSTE_HORA_ALARMA:
-                incrementar_y_decrementar(hora_ajuste, false);
-                DisplayWriteBCD(placa->display, hora_ajuste, 4);
-                break;
-            default:
-                break;
-            }
-
             UpdateAllInputs(placa);
         }
     }
