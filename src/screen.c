@@ -130,25 +130,15 @@ display_t DisplayCreate(uint8_t digits, display_driver_t driver) {
 }
 
 void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size) {
-    uint8_t puntos_guardados[DISPLAY_MAX_DIGITS];
     for (int i = 0; i < display->digits; i++) {
-        puntos_guardados[i] = display->vram[i] & SEGMENT_P;
-    }
+        uint8_t nuevo_digito = 0;
 
-    memset(display->vram, 0, sizeof(display->vram));
-    for (int i = 0; i < size; i++) {
-        if (i >= display->digits) {
-            break;
-        }
-        if (number[i] < 10) {
-            display->vram[i] = lut[number[i]];
+        if (i < size) {
+            nuevo_digito = (number[i] < 10) ? lut[number[i]] : lut[10];
         } else {
-            display->vram[i] = lut[10];
+            nuevo_digito = 0;
         }
-    }
-
-    for (int i = 0; i < display->digits; i++) {
-        display->vram[i] |= puntos_guardados[i];
+        display->vram[i] = nuevo_digito | (display->vram[i] & SEGMENT_P);
     }
 }
 

@@ -77,6 +77,9 @@ static bool confirmar_alarma = false;
 
 static volatile uint32_t timer_rebote = 0;
 
+static volatile uint32_t tick_counter = 0;
+static volatile bool punto_segundo = false;
+
 /* === Public variable definition  ============================================================= */
 
 /* === Private function definitions ============================================================ */
@@ -220,10 +223,18 @@ int main(void) {
             switch (estado) {
             case HORA_SIN_AJUSTAR:
                 DisplayWriteBCD(placa->display, DEFAULT_TIME, 4);
-                DisplayFlashDigits(placa->display, 0, 3, TICKS_PER_SECOND / 2);
+                DisplayClearDots(placa->display, 0, 3);
+                DisplaySetDots(placa->display, 1, 1);
+                tick_counter = 0;
+                punto_segundo = false;
+                DisplayFlashDigits(placa->display, 0, 3, TICKS_PER_SECOND / 4);
                 break;
             case MOSTRANDO_HORA:
                 DisplayFlashDigits(placa->display, 0, 0, 0);
+                DisplayClearDots(placa->display, 0, 3);
+                DisplaySetDots(placa->display, 1, 1);
+                tick_counter = 0;
+                punto_segundo = false;
                 if (estado_anterior == AJUSTE_HORA_ACTUAL && confirmar_ajuste) {
                     RelojSetupCurrentTime(reloj, hora_ajuste);
                     confirmar_ajuste = false;
@@ -232,9 +243,14 @@ int main(void) {
                     RelojSetupAlarm(reloj, hora_ajuste);
                     confirmar_alarma = false;
                 }
+                if (RelojGetAlarm(reloj, NULL)) {
+                    DisplaySetDots(placa->display, 3, 3);
+                }
                 break;
             case AJUSTE_MINUTOS_ACTUAL:
                 DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
+                DisplayClearDots(placa->display, 0, 3);
+                DisplaySetDots(placa->display, 1, 1);
                 if (RelojGetCurrentTime(reloj, hora_ajuste) == false) {
                     memcpy(hora_ajuste, DEFAULT_TIME, sizeof(hora_t));
                 }
@@ -244,6 +260,8 @@ int main(void) {
                 break;
             case AJUSTE_MINUTOS_ALARMA:
                 DisplayFlashDigits(placa->display, 2, 3, TICKS_PER_SECOND / 4);
+                DisplayClearDots(placa->display, 0, 3);
+                DisplaySetDots(placa->display, 0, 3);
                 if (RelojGetAlarm(reloj, hora_ajuste) == false) {
                     memcpy(hora_ajuste, DEFAULT_TIME, sizeof(hora_t));
                 }
@@ -258,10 +276,18 @@ int main(void) {
         estado_anterior = estado;
         switch (estado) {
         case HORA_SIN_AJUSTAR:
+            if (punto_segundo) {
+                DisplayToggleDots(placa->display, 1, 1);
+                punto_segundo = false;
+            }
             break;
         case MOSTRANDO_HORA:
             RelojGetCurrentTime(reloj, hora_actual);
             DisplayWriteBCD(placa->display, hora_actual, 4);
+            if (punto_segundo) {
+                DisplayToggleDots(placa->display, 1, 1);
+                punto_segundo = false;
+            }
             break;
         case AJUSTE_MINUTOS_ACTUAL:
             incrementar_y_decrementar(hora_ajuste, true);
@@ -289,6 +315,12 @@ int main(void) {
 void SysTick_Handler(void) {
     DisplayRefresh(placa->display);
     RelojNewTick(reloj);
+
+    tick_counter++;
+    if (tick_counter >= TICKS_PER_SECOND / 2) {
+        tick_counter = 0;
+        punto_segundo = true;
+    }
 
     if (!DigitalInputGetState(placa->accept) && !DigitalInputGetState(placa->cancel) &&
         !DigitalInputGetState(placa->f1) && !DigitalInputGetState(placa->f2) && !DigitalInputGetState(placa->f3) &&
