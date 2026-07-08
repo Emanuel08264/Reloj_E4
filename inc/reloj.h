@@ -122,6 +122,7 @@ bool RelojSetupAlarm(clock_t reloj, const hora_t alarm_time);
  * @brief Obtiene la hora programada de la alarma en formato BCD y su estado actual.
  * * @param reloj Instancia del reloj.
  * @param alarm_time Arreglo donde se guardará la hora programada de la alarma.
+ *                  Si se pasa NULL, la función solo devuelve el estado de activación de la alarma
  * @return true Si la alarma se encuentra actualmente habilitada.
  * @return false Si la alarma se encuentra deshabilitada.
  */

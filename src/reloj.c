@@ -188,7 +188,9 @@ bool RelojSetupAlarm(clock_t self, const hora_t alarm_time) {
 }
 
 bool RelojGetAlarm(clock_t self, hora_t alarm_time) {
-    DecimalToBCD(self->alarm, alarm_time);
+    if (alarm_time != NULL) {
+        DecimalToBCD(self->alarm, alarm_time);
+    }
     return self->alarm_enabled;
 }
 

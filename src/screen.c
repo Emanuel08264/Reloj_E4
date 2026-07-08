@@ -130,6 +130,11 @@ display_t DisplayCreate(uint8_t digits, display_driver_t driver) {
 }
 
 void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size) {
+    uint8_t puntos_guardados[DISPLAY_MAX_DIGITS];
+    for (int i = 0; i < display->digits; i++) {
+        puntos_guardados[i] = display->vram[i] & SEGMENT_P;
+    }
+
     memset(display->vram, 0, sizeof(display->vram));
     for (int i = 0; i < size; i++) {
         if (i >= display->digits) {
@@ -140,6 +145,10 @@ void DisplayWriteBCD(display_t display, uint8_t * number, uint8_t size) {
         } else {
             display->vram[i] = lut[10];
         }
+    }
+
+    for (int i = 0; i < display->digits; i++) {
+        display->vram[i] |= puntos_guardados[i];
     }
 }
 
@@ -200,6 +209,32 @@ void DisplayToggleDots(display_t display, uint8_t from, uint8_t to) {
 
     for (int i = from; i <= to; i++) {
         display->vram[i] ^= SEGMENT_P;
+    }
+}
+
+void DisplaySetDots(display_t display, uint8_t from, uint8_t to) {
+    if (from >= display->digits) {
+        from = display->digits - 1;
+    }
+    if (to >= display->digits) {
+        to = display->digits - 1;
+    }
+
+    for (int i = from; i <= to; i++) {
+        display->vram[i] |= SEGMENT_P;
+    }
+}
+
+void DisplayClearDots(display_t display, uint8_t from, uint8_t to) {
+    if (from >= display->digits) {
+        from = display->digits - 1;
+    }
+    if (to >= display->digits) {
+        to = display->digits - 1;
+    }
+
+    for (int i = from; i <= to; i++) {
+        display->vram[i] &= ~SEGMENT_P;
     }
 }
 

@@ -149,6 +149,26 @@ void DisplayFlashDigits(display_t display, uint8_t from, uint8_t to, uint16_t fr
  */
 void DisplayToggleDots(display_t display, uint8_t from, uint8_t to);
 
+/**
+ * @brief Establece el punto decimal de un rango de dígitos
+ *
+ * @param  display  Descriptor creado con @ref DisplayCreate
+ * @param  from     Índice del primer dígito
+ * @param  to       Índice del último dígito
+ * @note Si from o to mayor que digits, les asigna digits-1.
+ */
+void DisplaySetDots(display_t display, uint8_t from, uint8_t to);
+
+/**
+ * @brief Borra el punto decimal de un rango de dígitos
+ *
+ * @param  display  Descriptor creado con @ref DisplayCreate
+ * @param  from     Índice del primer dígito
+ * @param  to       Índice del último dígito
+ * @note Si from o to mayor que digits, les asigna digits-1.
+ */
+void DisplayClearDots(display_t display, uint8_t from, uint8_t to);
+
 /* === End of conditional blocks =================================================================================== */
 
 #ifdef __cplusplus

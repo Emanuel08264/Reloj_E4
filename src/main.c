@@ -206,7 +206,7 @@ static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
 
 int main(void) {
     placa = BoardCreate();
-    reloj = RelojCreate(16, SonarAlarma);
+    reloj = RelojCreate(TICKS_PER_SECOND, SonarAlarma);
     estado = HORA_SIN_AJUSTAR;
     estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
                                                // que se ejecute la lógica de actualización de pantalla al inicio
