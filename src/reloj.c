@@ -202,7 +202,7 @@ void RelojToggleAlarm(clock_t self) {
 }
 
 void RelojSnoozeAlarm(clock_t self, const unsigned int snooze_time) {
-    self->snooze_alarm = (self->alarm + 60 * snooze_time) % SECONDS_PER_DAY;
+    self->snooze_alarm = (self->time + 60 * snooze_time) % SECONDS_PER_DAY;
     self->snooze = true;
 }
 

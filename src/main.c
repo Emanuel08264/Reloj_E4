@@ -80,11 +80,15 @@ static volatile uint32_t timer_rebote = 0;
 static volatile uint32_t tick_counter = 0;
 static volatile bool punto_segundo = false;
 
+static bool alarma_sonando = false;
+
 /* === Public variable definition  ============================================================= */
 
 /* === Private function definitions ============================================================ */
 
 void SonarAlarma(clock_t reloj) {
+    alarma_sonando = true;
+    DigitalOutputActivate(placa->buzzer);
 }
 
 estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t reloj) {
@@ -96,6 +100,9 @@ estado_t LogicaEstadoSiguiente(estado_t estado_actual, board_t placa, clock_t re
         }
         break;
     case MOSTRANDO_HORA:
+        if (alarma_sonando) {
+            break;
+        }
         if ((time_on_f1 / TICKS_PER_SECOND) >= 3) {
             estado_siguiente = AJUSTE_MINUTOS_ACTUAL;
         }
@@ -209,7 +216,7 @@ static void incrementar_y_decrementar(hora_t ajuste, bool minutos) {
 
 int main(void) {
     placa = BoardCreate();
-    reloj = RelojCreate(TICKS_PER_SECOND, SonarAlarma);
+    reloj = RelojCreate(100, SonarAlarma);
     estado = HORA_SIN_AJUSTAR;
     estado_t estado_anterior = MOSTRANDO_HORA; // Se inicializa con cualquier estado distinto a HORA_SIN_AJUSTAR para
                                                // que se ejecute la lógica de actualización de pantalla al inicio
@@ -287,6 +294,26 @@ int main(void) {
             if (punto_segundo) {
                 DisplayToggleDots(placa->display, 1, 1);
                 punto_segundo = false;
+            }
+            if (alarma_sonando) {
+                if (DigitalInputHasActivated(placa->cancel)) {
+                    alarma_sonando = false;
+                    DigitalOutputDeactivate(placa->buzzer);
+                }
+                if (DigitalInputHasActivated(placa->accept)) {
+                    alarma_sonando = false;
+                    RelojSnoozeAlarm(reloj, 5);
+                    DigitalOutputDeactivate(placa->buzzer);
+                }
+            } else {
+                if (DigitalInputHasActivated(placa->cancel) && RelojGetAlarm(reloj, NULL)) {
+                    RelojToggleAlarm(reloj);
+                    DisplayClearDots(placa->display, 3, 3);
+                }
+                if (DigitalInputHasActivated(placa->accept) && !RelojGetAlarm(reloj, NULL)) {
+                    RelojToggleAlarm(reloj);
+                    DisplaySetDots(placa->display, 3, 3);
+                }
             }
             break;
         case AJUSTE_MINUTOS_ACTUAL:

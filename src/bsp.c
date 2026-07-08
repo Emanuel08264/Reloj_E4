@@ -86,7 +86,7 @@ static void UpdateSegments(uint8_t segments);
 static void ConfigureBuzzer(struct board_s * self) {
 
     Chip_SCU_PinMuxSet(BUZZER_PORT, BUZZER_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_INACT | BUZZER_FUNC);
-    self->buzzer = DigitalOutputCreate(BUZZER_GPIO, BUZZER_BIT, false);
+    self->buzzer = DigitalOutputCreate(LED_1_GPIO, LED_1_BIT, false);
 }
 
 static void ConfigureKeys(struct board_s * self) {
